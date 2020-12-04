@@ -1,0 +1,15 @@
+header:
+  version : 1
+  includes:
+    - meta.yml
+
+local_conf_header:
+  00_meta-mender-luks: |
+    require conf/include/mender-luks.inc
+
+  01_meta-mender-luks: |
+    # overwrite this section in a custom layer
+    #
+    # MENDER/LUKS_PASSWORD           = "n3w_p@ssw0rd"
+    # MENDER/LUKS_BYPASS_ENCRYPTION  = "0"
+    # MENDER/LUKS_BYPASS_RANDOM_KEY  = "0"

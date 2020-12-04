@@ -1,0 +1,12 @@
+header:
+  version : 1
+  includes:
+    - repo: meta-mender-kernel
+      file: kas/kas.yml
+
+repos:
+  meta-mender-luks:
+
+  meta-mender-kernel:
+    url    : "https://github.com/coreycothrum/meta-mender-kernel.git"
+    refspec: 2ed2b47436afacd1eca5bdcdeb34411bfa54b4d5

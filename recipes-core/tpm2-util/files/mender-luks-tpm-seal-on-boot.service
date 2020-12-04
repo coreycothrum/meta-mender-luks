@@ -1,0 +1,17 @@
+[Unit]
+Description=Seal TPM on Boot
+After=local-fs.target systemd-udev-settle.service
+Requires=local-fs.target systemd-udev-settle.service
+ConditionPathExistsGlob=/dev/tpm*
+
+[Service]
+Type=simple
+ExecStart=@@sbindir@@/mender-luks-tpm-seal-on-boot.sh
+
+TimeoutSec=infinity
+
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target

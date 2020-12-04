@@ -1,0 +1,15 @@
+[Unit]
+Description=Seal new key to TPM
+After=local-fs.target systemd-udev-settle.service mender-luks-tpm-seal-on-boot.service
+Requires=local-fs.target systemd-udev-settle.service
+ConditionPathExistsGlob=/dev/tpm*
+
+[Service]
+Type=oneshot
+ExecStart=@@sbindir@@/mender-luks-tpm2-util.sh --write
+
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,12 @@
+header:
+  version : 1
+  includes:
+    - ../kas.efi-secure-boot.yml
+    - ../kas.tpm2.yml
+    - kas.min.x86-64.yml
+
+local_conf_header:
+  01_meta-mender-luks: |
+    MENDER/LUKS_PASSWORD                  = "n3w_p@ssw0rd"
+    MENDER/LUKS_BYPASS_RANDOM_KEY         = "0"
+    MENDER/LUKS_BYPASS_ENCRYPTION         = "0"

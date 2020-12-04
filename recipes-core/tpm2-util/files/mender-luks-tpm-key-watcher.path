@@ -1,0 +1,6 @@
+[Path]
+PathChanged=@@MENDER/LUKS_KEY_FILE@@
+MakeDirectory=True
+
+[Install]
+WantedBy=multi-user.target
