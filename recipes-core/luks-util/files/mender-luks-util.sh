@@ -10,19 +10,23 @@ CMD=""
 
 ################################################################################
 function usage {
-  echo "mender-luks-util [COMMAND] [OPTIONS]"
-  echo "Commands:"
-  echo "  validate  : check if supplied passphrase is a LUKS key"
-  echo "  password  : set primary key passphrase"
-  echo "  brick     : brick LUKS partitions"
-  echo "  reencrypt : generate new/unique LUKS master keys"
-  echo ""
-  echo "Options:"
-  echo "  --recovery            : set recovery key passphrase instead of primary"
-  echo "  --random              : randomly generate passphrase"
-  echo "  --prompt              : prompt for passphrase"
-  echo "  --password  <password>: set passphrase to this explict string"
-  echo "  --key-file  <file>    : set passphrase to this key-file"
+  log "mender-luks-util [COMMAND] [OPTIONS]"
+  log "Commands:"
+  log "  validate  : check if supplied passphrase is a LUKS key"
+  log "  password  : set primary key passphrase"
+  log "  brick     : brick LUKS partitions"
+  log "  reencrypt : generate new/unique LUKS master keys"
+  log ""
+  log "Options:"
+  log "  --recovery            : set recovery key passphrase instead of primary"
+  log "  --random              : randomly generate passphrase"
+  log "  --prompt              : prompt for passphrase"
+  log "  --password  <password>: set passphrase to this explict string"
+  log "  --key-file  <file>    : set passphrase to this key-file"
+}
+
+log() {
+  echo "$@"
 }
 
 function fatal {
@@ -56,21 +60,24 @@ function _ask_password {
   fi
 }
 
-function _enforce_password {
+function _check_password {
   _ask_password
 
   local cl_out="$(echo -n $PASSWORD | cracklib-check)"
 
   if ! grep -qi ": OK" <<< $cl_out; then
-    fatal "passphrase   :  $cl_out"
+    log                   "$cl_out"
+    return 1
   fi
 
   if grep -qi "@@MENDER/LUKS_PASSWORD@@" $TMP_KEY_FILE; then
-    fatal "passphrase is too similar to default password( @@MENDER/LUKS_PASSWORD@@ )"
+    log "passphrase is too similar to default password( @@MENDER/LUKS_PASSWORD@@ )"
+    return 1
   fi
 
   if grep -qi "$PASSWORD" <<< "@@MENDER/LUKS_PASSWORD@@"; then
-    fatal "passphrase is too similar to default password( @@MENDER/LUKS_PASSWORD@@ )"
+    log "passphrase is too similar to default password( @@MENDER/LUKS_PASSWORD@@ )"
+    return 1
   fi
 }
 
@@ -116,7 +123,7 @@ function _validate_password {
 }
 
 function _set_password {
-  _enforce_password
+  _check_password || exit 1
 
   for disk in `ls $DPATH`
   do
@@ -138,7 +145,15 @@ function _set_password {
   chmod 400           $LUK_KEY_FILE
 }
 
+function _encrypt {
+  _check_password || exit 1
+
+  fatal "#TODO _encrypt() not implemented"
+}
+
 function _reencrypt {
+  fatal "#TODO _reencrypt() not implemented"
+
   for disk in `ls $DPATH`
   do
     local dev="$DPATH/$disk"
@@ -157,10 +172,13 @@ function _reencrypt {
   done
 }
 
-function _encrypt {
-  _enforce_password
+function _gen_random_password {
+  while true; do
+    PASSWORD=`head /dev/urandom | sha512sum | cut -d ' ' -f 1 | tr -d '\n'`
+    _check_password && return 0
+  done
 
-  fatal "#TODO _encrypt() not implemented"
+  fatal "failed to generate sufficient random password"
 }
 ################################################################################
 if [ "$#" -lt 1 ]; then
@@ -177,8 +195,7 @@ do
     "--prompt")    PASSWORD=""              ; shift         ;;
     "--password")  PASSWORD="$2"            ; shift ; shift ;;
     "--key-file")  PASSWORD=$(cat $2)       ; shift ; shift ;;
-    "--random")    PASSWORD=`head /dev/urandom | sha512sum | cut -d ' ' -f 1 | tr -d '\n'` \
-	                                    ; shift         ;;
+    "--random")    _gen_random_password     ; shift         ;;
     "password")    CMD="_set_password"      ; shift         ;;
     "encrypt")     CMD="_encrypt"           ; shift         ;;
     "reencrypt")   CMD="_reencrypt"         ; shift         ;;
