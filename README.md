@@ -124,6 +124,9 @@ Commands executed from [docker image](https://github.com/coreycothrum/meta-mende
     # build TARGET image
     cd $YOCTO_WORKDIR && kas build $YOCTO_WORKDIR/meta-mender-luks/kas/reference_builds/kas.min.x86-64.yml
 
+    # build QEMU image
+    cd $YOCTO_WORKDIR && kas build $YOCTO_WORKDIR/meta-mender-luks/kas/reference_builds/kas.min.x86-64.yml:$YOCTO_WORKDIR/meta-mender-luks/kas/reference_builds/kas.qemu.yml
+
 ## Use Notes
 * The mender update artifact (\*.mender) is **UNENCRYPTED**.
 * ``MENDER_BOOT_PART_SIZE_MB`` needs to have capacity for detached LUKS headers.

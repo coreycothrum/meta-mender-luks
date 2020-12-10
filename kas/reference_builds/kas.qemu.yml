@@ -1,0 +1,13 @@
+header:
+  version : 1
+
+machine: qemux86-64
+
+local_conf_header:
+  01_meta-mender-device: |
+    MENDER_STORAGE_DEVICE = "/dev/hda"
+
+repos:
+  meta-mender:
+    layers:
+      meta-mender-qemu:
