@@ -59,7 +59,9 @@ do_mender_luks_encrypt_image() {
 
   set +e
   {
-    $sudo_cmd dmsetup remove_all --force
+    $sudo_cmd dmsetup remove --force ${MENDER/LUKS__DATA__PART___DM_NAME}
+    $sudo_cmd dmsetup remove --force ${MENDER/LUKS_ROOTFS_PART_A_DM_NAME}
+    $sudo_cmd dmsetup remove --force ${MENDER/LUKS_ROOTFS_PART_B_DM_NAME}
     $sudo_cmd losetup
     $sudo_cmd losetup -D
     
@@ -79,7 +81,9 @@ do_mender_luks_encrypt_image() {
 
     ##FIXME - extra parts to encrypt?
 
-    $sudo_cmd dmsetup remove_all --force
+    $sudo_cmd dmsetup remove --force ${MENDER/LUKS__DATA__PART___DM_NAME}
+    $sudo_cmd dmsetup remove --force ${MENDER/LUKS_ROOTFS_PART_A_DM_NAME}
+    $sudo_cmd dmsetup remove --force ${MENDER/LUKS_ROOTFS_PART_B_DM_NAME}
     $sudo_cmd losetup -D
     $sudo_cmd losetup
   }
