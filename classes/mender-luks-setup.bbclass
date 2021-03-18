@@ -5,10 +5,9 @@ IMAGE_CLASSES += "        \
 "
 
 ################################################################################
-do_mender_luks_update_fstab() {
+mender_update_fstab_file_append() {
   mender_luks_replace_encrypted_parts ${IMAGE_ROOTFS}${sysconfdir}/fstab
 }
-addtask do_mender_luks_update_fstab after do_rootfs before do_image
 
 ################################################################################
 python do_mender_luks_checks() {
