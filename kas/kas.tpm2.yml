@@ -10,10 +10,6 @@ local_conf_header:
     DISTRO_FEATURES_append += "tpm2"
 
 repos:
-  meta-python2:
-    url    : "https://git.openembedded.org/meta-python2"
-    refspec: 07dca1e54f82a06939df9b890c6d1ce1e3197f75
-
   meta-secure-core:
     layers :
       meta-tpm2:

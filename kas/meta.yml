@@ -9,4 +9,4 @@ repos:
 
   meta-mender-kernel:
     url    : "https://github.com/coreycothrum/meta-mender-kernel.git"
-    refspec: 251b69faf6c3e12539e59e842d98e0ff4b5612ca
+    refspec: 63626c098e4e8767e8b297952cb2d6994dc95afd
