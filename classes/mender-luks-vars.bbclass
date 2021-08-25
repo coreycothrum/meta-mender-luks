@@ -56,6 +56,7 @@ MENDER/LUKS_CRYPTSETUP_OPTS_SPECS   = "                                         
                                         --hash     ${MENDER/LUKS_CRYPTSETUP_HASH}      \
                                         --pbkdf    ${MENDER/LUKS_CRYPTSETUP_PBKDF}     \
                                       "
+MENDER/LUKS_CRYPTTAB_OPTS         ??= "luks,nofail"
 
 MENDER/LUKS_TPM2TOOLS_TCTI_NAME   ??= "device"
 MENDER/LUKS_TPM2TOOLS_DEVICE_FILE ??= "/dev/tpmrm0"

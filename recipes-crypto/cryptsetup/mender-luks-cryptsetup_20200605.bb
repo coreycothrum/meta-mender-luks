@@ -29,9 +29,9 @@ do_install() {
     install -d                          ${D}${sysconfdir}
     install -m 0644 ${WORKDIR}/crypttab ${D}${sysconfdir}
 
-    echo "${MENDER/LUKS__DATA__PART___DM_NAME} ${MENDER_DATA_PART}     none luks,nofail,header=${MENDER/LUKS__DATA__PART___HEADER}"  > ${D}${sysconfdir}/crypttab
-    echo "${MENDER/LUKS_ROOTFS_PART_A_DM_NAME} ${MENDER_ROOTFS_PART_A} none luks,nofail,header=${MENDER/LUKS_ROOTFS_PART_A_HEADER}" >> ${D}${sysconfdir}/crypttab
-    echo "${MENDER/LUKS_ROOTFS_PART_B_DM_NAME} ${MENDER_ROOTFS_PART_B} none luks,nofail,header=${MENDER/LUKS_ROOTFS_PART_B_HEADER}" >> ${D}${sysconfdir}/crypttab
+    echo "${MENDER/LUKS__DATA__PART___DM_NAME} ${MENDER_DATA_PART}     none ${MENDER/LUKS_CRYPTTAB_OPTS},header=${MENDER/LUKS__DATA__PART___HEADER}"  > ${D}${sysconfdir}/crypttab
+    echo "${MENDER/LUKS_ROOTFS_PART_A_DM_NAME} ${MENDER_ROOTFS_PART_A} none ${MENDER/LUKS_CRYPTTAB_OPTS},header=${MENDER/LUKS_ROOTFS_PART_A_HEADER}" >> ${D}${sysconfdir}/crypttab
+    echo "${MENDER/LUKS_ROOTFS_PART_B_DM_NAME} ${MENDER_ROOTFS_PART_B} none ${MENDER/LUKS_CRYPTTAB_OPTS},header=${MENDER/LUKS_ROOTFS_PART_B_HEADER}" >> ${D}${sysconfdir}/crypttab
 
     #FIXME - extra parts to encrypt?
 
