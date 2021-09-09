@@ -12,6 +12,7 @@ function fatal {
 }
 
 ################################################################################
+BOOT_COUNT="$(fw_printenv bootcount | sed 's/[^=]*=//')"
 BOOT_PART="$(fw_printenv mender_boot_part | sed 's/[^=]*=//')"
 ROOT_PART=""
 
@@ -19,7 +20,13 @@ ROOT_MNT_DIR="@@MENDER/KERNEL_ROOT_CANDIDATE_MNT_DIR@@"
 
 #BOOT_PART :   active partition
 #ROOT_PART : inactive partition
-if   [ "$BOOT_PART" -eq "@@MENDER_ROOTFS_PART_A_NUMBER@@" ]; then
+if   [ "$BOOT_PART" -eq "@@MENDER_ROOTFS_PART_A_NUMBER@@" ] && [ "$BOOT_COUNT" -eq "0" ]; then
+  ROOT_PART="@@MENDER/LUKS_DM_MAPPER_DIR@@/@@MENDER/LUKS_ROOTFS_PART_A_DM_NAME@@"
+
+elif [ "$BOOT_PART" -eq "@@MENDER_ROOTFS_PART_A_NUMBER@@" ]; then
+  ROOT_PART="@@MENDER/LUKS_DM_MAPPER_DIR@@/@@MENDER/LUKS_ROOTFS_PART_B_DM_NAME@@"
+
+elif [ "$BOOT_PART" -eq "@@MENDER_ROOTFS_PART_B_NUMBER@@" ] && [ "$BOOT_COUNT" -eq "0" ]; then
   ROOT_PART="@@MENDER/LUKS_DM_MAPPER_DIR@@/@@MENDER/LUKS_ROOTFS_PART_B_DM_NAME@@"
 
 elif [ "$BOOT_PART" -eq "@@MENDER_ROOTFS_PART_B_NUMBER@@" ]; then
