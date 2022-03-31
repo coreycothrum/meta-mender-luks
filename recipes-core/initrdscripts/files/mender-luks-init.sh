@@ -92,12 +92,15 @@ unlock_luks_partitions() {
   # unlock, mount rootfs partition
   for try in $RETRY_COUNT:
   do
-    local CMD="${CMD_PREPEND} cryptsetup luksOpen                             \
-                                         @@MENDER/LUKS_CRYPTSETUP_OPTS_BASE@@ \
-                                         --header $MNT_DIR/$ROOT_HEADER       \
-                                         $KEY_VS_PROMPT                       \
-                                         $ROOT_DEV                            \
-                                         $ROOT_DM_NAME                        "
+    local CMD="$CMD_PREPEND cryptsetup luksOpen                             \
+                                       @@MENDER/LUKS_CRYPTSETUP_OPTS_BASE@@ \
+                                       --header $MNT_DIR/$ROOT_HEADER       \
+                                       $KEY_VS_PROMPT                       \
+                                       $ROOT_DEV                            \
+                                       $ROOT_DM_NAME                        "
+
+    # log "$CMD"
+    # debug_shell
 
     if eval $CMD; then
       ROOT_DEV="@@MENDER/LUKS_DM_MAPPER_DIR@@/$ROOT_DM_NAME"
