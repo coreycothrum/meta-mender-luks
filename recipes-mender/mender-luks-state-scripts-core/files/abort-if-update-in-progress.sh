@@ -13,7 +13,7 @@ function fatal {
 
 ################################################################################
 UPGRADE_AV="$(fw_printenv upgrade_available | sed 's/[^=]*=//')"
-BOOT_COUNT="$(fw_printenv bootcount | sed 's/[^=]*=//')"
+BOOT_COUNT="$(fw_printenv bootcount         | sed 's/[^=]*=//')"
 
 if [ "$BOOT_COUNT" -gt "0" ] && [ "$UPGRADE_AV" -gt "0" ]; then
     fatal "an update is already in progress; either commit or rollback before trying again"

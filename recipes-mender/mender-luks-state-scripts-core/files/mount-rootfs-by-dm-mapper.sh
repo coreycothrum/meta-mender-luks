@@ -12,21 +12,22 @@ function fatal {
 }
 
 ################################################################################
-BOOT_COUNT="$(fw_printenv bootcount | sed 's/[^=]*=//')"
-BOOT_PART="$(fw_printenv mender_boot_part | sed 's/[^=]*=//')"
+UPGRADE_AV="$(fw_printenv upgrade_available | sed 's/[^=]*=//')"
+BOOT_COUNT="$(fw_printenv bootcount         | sed 's/[^=]*=//')"
+BOOT_PART="$(fw_printenv  mender_boot_part  | sed 's/[^=]*=//')"
 ROOT_PART=""
 
 ROOT_MNT_DIR="@@MENDER/KERNEL_ROOT_CANDIDATE_MNT_DIR@@"
 
 #BOOT_PART :   active partition
 #ROOT_PART : inactive partition
-if   [ "$BOOT_PART" -eq "@@MENDER_ROOTFS_PART_A_NUMBER@@" ] && [ "$BOOT_COUNT" -eq "0" ]; then
+if   [ "$BOOT_PART" -eq "@@MENDER_ROOTFS_PART_A_NUMBER@@" ] && [ "$UPGRADE_AV" -ne "0" ]; then
   ROOT_PART="@@MENDER/LUKS_DM_MAPPER_DIR@@/@@MENDER/LUKS_ROOTFS_PART_A_DM_NAME@@"
 
 elif [ "$BOOT_PART" -eq "@@MENDER_ROOTFS_PART_A_NUMBER@@" ]; then
   ROOT_PART="@@MENDER/LUKS_DM_MAPPER_DIR@@/@@MENDER/LUKS_ROOTFS_PART_B_DM_NAME@@"
 
-elif [ "$BOOT_PART" -eq "@@MENDER_ROOTFS_PART_B_NUMBER@@" ] && [ "$BOOT_COUNT" -eq "0" ]; then
+elif [ "$BOOT_PART" -eq "@@MENDER_ROOTFS_PART_B_NUMBER@@" ] && [ "$UPGRADE_AV" -ne "0" ]; then
   ROOT_PART="@@MENDER/LUKS_DM_MAPPER_DIR@@/@@MENDER/LUKS_ROOTFS_PART_B_DM_NAME@@"
 
 elif [ "$BOOT_PART" -eq "@@MENDER_ROOTFS_PART_B_NUMBER@@" ]; then
@@ -35,6 +36,8 @@ elif [ "$BOOT_PART" -eq "@@MENDER_ROOTFS_PART_B_NUMBER@@" ]; then
 else
   fatal "$BOOT_PART is not a known/valid rootfs partition"
 fi
+
+log "@@MENDER_STORAGE_DEVICE_BASE@@$ROOT_PART found as candidate rootfs partition"
 
 if ! mount |        grep -q $ROOT_MNT_DIR; then
   mkdir -p                  $ROOT_MNT_DIR
