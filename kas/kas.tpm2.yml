@@ -7,7 +7,7 @@ header:
 
 local_conf_header:
   05_tpm2: |
-    DISTRO_FEATURES_append += "tpm2"
+    DISTRO_FEATURES:append = " tpm2"
 
 repos:
   meta-secure-core:

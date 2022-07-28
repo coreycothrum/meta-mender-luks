@@ -5,7 +5,7 @@ IMAGE_CLASSES += "        \
 "
 
 ################################################################################
-mender_update_fstab_file_append() {
+mender_update_fstab_file:append() {
   mender_luks_replace_encrypted_parts ${IMAGE_ROOTFS}${sysconfdir}/fstab
 }
 

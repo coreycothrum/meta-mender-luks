@@ -1,1 +1,1 @@
-PACKAGECONFIG_append += "cryptsetup"
+PACKAGECONFIG:append = " cryptsetup"

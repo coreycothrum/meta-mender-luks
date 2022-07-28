@@ -8,7 +8,7 @@ SRC_URI          += "                                           \
                       file://mender-luks-password-agent.path    \
                       file://mender-luks-password-agent.service \
                     "
-FILES_${PN}       = "                                                              \
+FILES:${PN}       = "                                                              \
                       ${sbindir}/mender-luks-password-agent                        \
                       ${systemd_unitdir}/system/mender-luks-password-agent.path    \ 
                       ${systemd_unitdir}/system/mender-luks-password-agent.service \ 
@@ -16,7 +16,7 @@ FILES_${PN}       = "                                                           
 DEPENDS          += "         \
                       libinih \
                     "
-RDEPENDS_${PN}   += "         \
+RDEPENDS:${PN}   += "         \
                       libinih \
                     "
 
@@ -24,7 +24,7 @@ inherit bitbake-variable-substitution
 inherit systemd
 
 SYSTEMD_AUTO_ENABLE   = "enable"
-SYSTEMD_SERVICE_${PN} = "mender-luks-password-agent.path"
+SYSTEMD_SERVICE:${PN} = "mender-luks-password-agent.path"
 
 LDFLAGS += "-L=/usr/lib -linihcpp -linih"
 

@@ -13,7 +13,7 @@
 #include <sys/un.h>
 #include <signal.h>
 
-#include <inih/INIReader.h>
+#include <INIReader.h>
 
 #define ASK_PASSWD_DIR "/run/systemd/ask-password/"
 #define GET_PASSWD_CMD "@@MENDER/LUKS_PASSWORD_AGENT_CMD@@"

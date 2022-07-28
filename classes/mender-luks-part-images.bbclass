@@ -18,7 +18,7 @@ python () {
 }
 
 ################################################################################
-IMAGE_CMD_bootimg_append() {
+IMAGE_CMD:bootimg:append() {
   local boot_real_sz="${MENDER_BOOT_PART_SIZE_MB}"
   local boot_need_sz="${@mender_kernel_calc_dir_size_mb("${WORKDIR}/bootfs.${BB_CURRENTTASK}")}"
 
@@ -32,16 +32,16 @@ IMAGE_CMD_bootimg_append() {
 }
 
 ################################################################################
-IMAGE_CMD_biosimg_append() {
+IMAGE_CMD:biosimg:append() {
   do_mender_luks_encrypt_image "biosimg"
 }
-IMAGE_CMD_gptimg_append() {
+IMAGE_CMD:gptimg:append() {
   do_mender_luks_encrypt_image "gptimg"
 }
-IMAGE_CMD_sdimg_append() {
+IMAGE_CMD:sdimg:append() {
   do_mender_luks_encrypt_image "sdimg"
 }
-IMAGE_CMD_uefiimg_append() {
+IMAGE_CMD:uefiimg:append() {
   do_mender_luks_encrypt_image "uefiimg"
 }
 

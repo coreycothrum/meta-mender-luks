@@ -1,7 +1,7 @@
 SUMMARY                    = "mender-luks initramfs"
 LICENSE                    = "MIT"
 
-export IMAGE_BASENAME      = "mender-luks-initramfs"
+export IMAGE_BASENAME      = "${MLPREFIX}mender-luks-initramfs"
 IMAGE_FEATURES             = ""
 IMAGE_LINGUAS              = ""
 IMAGE_FSTYPES              = "${INITRAMFS_FSTYPES}"
@@ -15,9 +15,12 @@ IMAGE_ROOTFS_EXTRA_SPACE   = "0"
 
 PACKAGE_INSTALL           += "                                    \
                                packagegroup-mender-luks-initramfs \
+                               libgcc                             \
                                ${ROOTFS_BOOTSTRAP_INSTALL}        \
                                ${VIRTUAL-RUNTIME_base-utils}      \
                              "
+
+COMPATIBLE_HOST = '(x86_64.*|i.86.*|arm.*|aarch64.*)-(linux.*|freebsd.*)'
 
 inherit core-image
 deltask do_packagedata

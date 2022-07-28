@@ -29,7 +29,7 @@ MENDER/LUKS_PART_IMAGE_DEPENDS      = "                                         
                                         util-linux-native:do_populate_sysroot   \
                                       "
 
-MENDER/LUKS_BLACKLISTED_IMAGE_TYPES      = "             \
+MENDER/LUKS_DENY_IMAGE_TYPES        = "                  \
                                              biosimg.bz2 \
                                              gptimg.bz2  \
                                              sdimg.bz2   \

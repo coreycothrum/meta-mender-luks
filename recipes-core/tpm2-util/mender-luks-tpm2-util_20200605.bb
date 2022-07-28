@@ -9,8 +9,8 @@ inherit systemd
 inherit bitbake-variable-substitution
 
 SYSTEMD_AUTO_ENABLE    = "enable"
-SYSTEMD_SERVICE_${PN} += "mender-luks-tpm-key-watcher.path"
-SYSTEMD_SERVICE_${PN} += "mender-luks-tpm-seal-on-boot.service"
+SYSTEMD_SERVICE:${PN} += "mender-luks-tpm-key-watcher.path"
+SYSTEMD_SERVICE:${PN} += "mender-luks-tpm-seal-on-boot.service"
 
 
 SRC_URI          = "                                             \
@@ -20,14 +20,14 @@ SRC_URI          = "                                             \
                      file://mender-luks-tpm-seal-on-boot.sh      \
                      file://mender-luks-tpm-seal-on-boot.service \
                    "
-FILES_${PN}      = "                                                                \
+FILES:${PN}      = "                                                                \
                      ${sbindir}/mender-luks-tpm2-util.sh                            \
                      ${sbindir}/mender-luks-tpm-seal-on-boot.sh                     \
                      ${systemd_unitdir}/system/mender-luks-tpm-key-watcher.path     \
                      ${systemd_unitdir}/system/mender-luks-tpm-key-watcher.service  \
                      ${systemd_unitdir}/system/mender-luks-tpm-seal-on-boot.service \
                    "
-RDEPENDS_${PN}   = "            \
+RDEPENDS:${PN}   = "            \
                      coreutils  \
                      tpm2-tools \
                    "
