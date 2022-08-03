@@ -75,15 +75,10 @@ The following definitions should be added to ``local.conf`` or ``custom_machine.
 
     require conf/include/mender-luks.inc
 
-    MENDER/LUKS_PASSWORD           = "n3w_p@ssw0rd"
+    MENDER/LUKS_PASSWORD             = "n3w_p@ssw0rd"
 
-    # 0 = encrypt IMAGE_FSTYPE @ build time
-    # 1 = do not encrypt IMAGE_FSTYPE. MUCH faster to build, but not suitable
-    #     for generating an image to provision disk with
-    # MENDER/LUKS_BYPASS_ENCRYPTION  = "1"
-
-    # 0 = @ boot: randomize LUKS password if weak or still set to default value
-    # 1 = @ boot: do not check LUKS password
+    # 0 = @ system boot: randomize LUKS password if weak or still set to default value
+    # 1 = @ system boot: do not check LUKS password
     # MENDER/LUKS_BYPASS_RANDOM_KEY  = "1"
 
     # PCRs levels to seal TPM2
@@ -103,9 +98,8 @@ Alternatively, a [kas](https://github.com/siemens/kas) file has been provided to
     local_conf_header:
       01_meta-mender-luks: |
         # define here, or in a custom layer
-        MENDER/LUKS_PASSWORD           = "n3w_p@ssw0rd"
-        MENDER/LUKS_BYPASS_RANDOM_KEY  = "1"
-        MENDER/LUKS_BYPASS_ENCRYPTION  = "0"
+        MENDER/LUKS_PASSWORD          = "n3w_p@ssw0rd"
+        MENDER/LUKS_BYPASS_RANDOM_KEY = "1"
 
 Additional files in [kas/](kas/) have been provided to selectively turn on some features, such as [TPM2 integration](#tpm2-integration).
 
@@ -126,6 +120,19 @@ Commands executed from [docker image](https://github.com/coreycothrum/meta-mende
 
     # build QEMU image
     cd $YOCTO_WORKDIR && kas build $YOCTO_WORKDIR/meta-mender-luks/kas/reference_builds/kas.min.x86-64.yml:$YOCTO_WORKDIR/meta-mender-luks/kas/reference_builds/kas.qemu.yml
+
+### Encrypting
+Encryption is not an automated part of the build process. [This native script](recipes-core/mender-luks-encrypt-image/files/mender-luks-encrypt-image.sh) is provided as an optional post-build action.
+
+This is only needed when provisioning a new device from the full disk image. The **mender artifacts work as-is** w/o this encryption step.
+
+To execute the encryption script:
+
+    bitbake       mender-luks-encrypt-image-native -caddto_recipe_sysroot       && \
+    oe-run-native mender-luks-encrypt-image-native mender-luks-encrypt-image.sh <path_to_deploy_image>
+
+This will take awhile. If it fails, it *may* not cleanup gracefully. Check `/dev/mapper` and `/dev/loop*` and cleanup as needed
+(hint(s): `sudo dmsetup remove --force <NAME>` and `sudo losetup && sudo losetup -D`).
 
 ## Use Notes
 * The mender update artifact (\*.mender) is **UNENCRYPTED**.

@@ -9,9 +9,8 @@ target : core-image-minimal
 
 local_conf_header:
   01_meta-mender-luks: |
-    MENDER/LUKS_PASSWORD                  = "n3w_p@ssw0rd"
-    MENDER/LUKS_BYPASS_RANDOM_KEY         = "1"
-    MENDER/LUKS_BYPASS_ENCRYPTION         = "0"
+    MENDER/LUKS_PASSWORD          = "n3w_p@ssw0rd"
+    MENDER/LUKS_BYPASS_RANDOM_KEY = "1"
 
   01_meta-mender: |
     INHERIT                              += "mender-full"

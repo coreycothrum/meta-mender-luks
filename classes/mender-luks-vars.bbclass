@@ -1,18 +1,20 @@
 ################################################################################
 # mender-luks variables
 ################################################################################
-MENDER/LUKS_BYPASS_ENCRYPTION     ??= "0"
 MENDER/LUKS_BYPASS_RANDOM_KEY     ??= "0"
-
 MENDER/LUKS_PASSWORD_AGENT_CMD    ??= ":"
 
 MENDER/LUKS_TMP_DIR                 = "/tmp/mender-luks"
 MENDER/LUKS_DATA_DIR                = "${MENDER_DATA_PART_MOUNT_LOCATION}/luks"
 MENDER/LUKS_HEADER_DIR              = "${MENDER_BOOT_PART_MOUNT_LOCATION}/LUKS"
 
-MENDER/LUKS__DATA__PART___HEADER    = "${MENDER/LUKS_HEADER_DIR}/${MENDER/LUKS__DATA__PART___DM_NAME}.luks"
-MENDER/LUKS_ROOTFS_PART_A_HEADER    = "${MENDER/LUKS_HEADER_DIR}/${MENDER/LUKS_ROOTFS_PART_A_DM_NAME}.luks"
-MENDER/LUKS_ROOTFS_PART_B_HEADER    = "${MENDER/LUKS_HEADER_DIR}/${MENDER/LUKS_ROOTFS_PART_B_DM_NAME}.luks"
+MENDER/LUKS_ROOTFS_PART_A_HEADER    = "${MENDER/LUKS_HEADER_DIR}/${MENDER/LUKS_ROOTFS_PART_A_HEADER_NAME}"
+MENDER/LUKS_ROOTFS_PART_B_HEADER    = "${MENDER/LUKS_HEADER_DIR}/${MENDER/LUKS_ROOTFS_PART_B_HEADER_NAME}"
+MENDER/LUKS__DATA__PART___HEADER    = "${MENDER/LUKS_HEADER_DIR}/${MENDER/LUKS__DATA__PART___HEADER_NAME}"
+
+MENDER/LUKS_ROOTFS_PART_A_HEADER_NAME = "${MENDER/LUKS_ROOTFS_PART_A_DM_NAME}.luks"
+MENDER/LUKS_ROOTFS_PART_B_HEADER_NAME = "${MENDER/LUKS_ROOTFS_PART_B_DM_NAME}.luks"
+MENDER/LUKS__DATA__PART___HEADER_NAME = "${MENDER/LUKS__DATA__PART___DM_NAME}.luks"
 
 MENDER/LUKS_DM_MAPPER_DIR           = "/dev/mapper"
 MENDER/LUKS__DATA__PART___DM_NAME   = "DataPart${MENDER_DATA_PART_NUMBER}"
@@ -22,21 +24,14 @@ MENDER/LUKS_ROOTFS_PART_B_DM_NAME   = "RootfsPart${MENDER_ROOTFS_PART_B_NUMBER}"
 
 MENDER/LUKS_SUDO_ENV                = "PATH=$PATH LD_LIBRARY_PATH=$LD_LIBRARY_PATH PSEUDO_UNLOAD=1"
 MENDER/LUKS_SUDO_CMD                = "env "PSEUDO_UNLOAD=1" /usr/bin/sudo env "${MENDER/LUKS_SUDO_ENV}""
-MENDER/LUKS_PART_IMAGE_DEPENDS      = "                                         \
-                                        coreutils-native:do_populate_sysroot    \
-                                        cryptsetup-native:do_populate_sysroot   \
-                                        libdevmapper-native:do_populate_sysroot \
-                                        util-linux-native:do_populate_sysroot   \
+MENDER/LUKS_DENY_IMAGE_TYPES        = "             \
+                                        biosimg.bz2 \
+                                        gptimg.bz2  \
+                                        sdimg.bz2   \
+                                        uefiimg.bz2 \
+                                        hddimg      \
+                                        wic         \
                                       "
-
-MENDER/LUKS_DENY_IMAGE_TYPES        = "                  \
-                                             biosimg.bz2 \
-                                             gptimg.bz2  \
-                                             sdimg.bz2   \
-                                             uefiimg.bz2 \
-                                             hddimg      \
-                                             wic         \
-                                           "
 
 MENDER/LUKS_KEY_FILE                = "${MENDER/LUKS_DATA_DIR}/.key.luks"
 MENDER/LUKS_SEAL_DELAY_SECS       ??= "120"

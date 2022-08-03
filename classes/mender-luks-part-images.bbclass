@@ -47,82 +47,18 @@ IMAGE_CMD:uefiimg:append() {
 
 ################################################################################
 do_mender_luks_encrypt_image() {
-  if [ "${MENDER/LUKS_BYPASS_ENCRYPTION}" -eq "1" ]; then
-    bbwarn "!!! MENDER/LUKS_BYPASS_ENCRYPTION is set, skipping encryption"                      \
-           "!!! this is not suitable for device provisioning, only generating mender artifacts" \
-           "!!! again.... devices provisioned with this build will fail to boot"
-    return 0
-  fi
-
   local suffix="$1"
-  local sudo_cmd="${MENDER/LUKS_SUDO_CMD}"
 
-  set +e
-  {
-    $sudo_cmd dmsetup remove --force ${MENDER/LUKS__DATA__PART___DM_NAME}
-    $sudo_cmd dmsetup remove --force ${MENDER/LUKS_ROOTFS_PART_A_DM_NAME}
-    $sudo_cmd dmsetup remove --force ${MENDER/LUKS_ROOTFS_PART_B_DM_NAME}
-    $sudo_cmd losetup
-    $sudo_cmd losetup -D
-    
-    local DEV_BASE=$($sudo_cmd losetup -f --show -P "${IMGDEPLOYDIR}/${IMAGE_NAME}.${suffix}")
-
-    do_mender_luks_encrypt_part "${DEV_BASE}p${MENDER_DATA_PART_NUMBER}"           \
-                                "${MENDER/LUKS__DATA__PART___DM_NAME}"             \
-                                "${IMAGE_ROOTFS}${MENDER/LUKS__DATA__PART___HEADER}"
-
-    do_mender_luks_encrypt_part "${DEV_BASE}p${MENDER_ROOTFS_PART_A_NUMBER}"       \
-                                "${MENDER/LUKS_ROOTFS_PART_A_DM_NAME}"             \
-                                "${IMAGE_ROOTFS}${MENDER/LUKS_ROOTFS_PART_A_HEADER}"
-
-    do_mender_luks_encrypt_part "${DEV_BASE}p${MENDER_ROOTFS_PART_B_NUMBER}"       \
-                                "${MENDER/LUKS_ROOTFS_PART_B_DM_NAME}"             \
-                                "${IMAGE_ROOTFS}${MENDER/LUKS_ROOTFS_PART_B_HEADER}"
-
-    ##FIXME - extra parts to encrypt?
-
-    $sudo_cmd dmsetup remove --force ${MENDER/LUKS__DATA__PART___DM_NAME}
-    $sudo_cmd dmsetup remove --force ${MENDER/LUKS_ROOTFS_PART_A_DM_NAME}
-    $sudo_cmd dmsetup remove --force ${MENDER/LUKS_ROOTFS_PART_B_DM_NAME}
-    $sudo_cmd losetup -D
-    $sudo_cmd losetup
-  }
-  set -e
-}
-
-do_mender_luks_encrypt_part() {
-  local DEV="$1"
-  local DM_NAME="$2"
-  local HEADER="$3"
-  local sudo_cmd="${MENDER/LUKS_SUDO_CMD}"
-
-  if   [ ! -f "$HEADER" ]; then
-    bbfatal "do_mender_luks_encrypt_part()::header($HEADER) does not exist; cannot encrypt"
-  elif [ ! -b "$DEV" ]; then
-    bbfatal "do_mender_luks_encrypt_part()::device($DEV) does not exist; cannot encrypt"
-  fi
-
-  local LUKS_KEYFILE="${WORKDIR}/key.$(openssl rand -hex 32).luks"
-  local LUKS_MASTER_KEYFILE="${WORKDIR}/master.key.$(openssl rand -hex 32).luks"
-
-  echo -n "${MENDER/LUKS_PASSWORD}" > "${LUKS_KEYFILE}"
-
-  cryptsetup  ${MENDER/LUKS_CRYPTSETUP_OPTS_BASE}   \
-      --dump-master-key                             \
-      --master-key-file    "${LUKS_MASTER_KEYFILE}" \
-      --key-file           "${LUKS_KEYFILE}"        \
-      --header             "${HEADER}"              \
-      luksDump "/dev/zero"
-
-   $sudo_cmd                                        \
-   cryptsetup ${MENDER/LUKS_CRYPTSETUP_OPTS_SPECS}  \
-      --master-key-file    "${LUKS_MASTER_KEYFILE}" \
-      --key-file           "${LUKS_KEYFILE}"        \
-      --header             "${HEADER}"              \
-      reencrypt --encrypt  "${DEV}" "${DM_NAME}"
-
-  $sudo_cmd cryptsetup luksClose ${DM_NAME}
-
-  shred -fu "${LUKS_KEYFILE}"
-  shred -fu "${LUKS_MASTER_KEYFILE}"
+  bbwarn "\n!!! The created image IS NOT encrypted. That is left for you to (optionally) do post build."                \
+         "\n!!! That means this build/image is not yet suitable for device provisioning."                               \
+         "\n!!! The mender artifacts however are perfectly usable as-is, so no need to encrypt if that's all you need." \
+         "\n!!! To generate an encrypted image suitable for provisioning, run:"                                         \
+         "\n"                                                                                                           \
+         "\n      bitbake       mender-luks-encrypt-image-native -caddto_recipe_sysroot       && \ "                    \
+         "\n      oe-run-native mender-luks-encrypt-image-native mender-luks-encrypt-image.sh    \ "                    \
+         "\n        ${DEPLOY_DIR_IMAGE}/${IMAGE_NAME}.${suffix}"                                                        \
+         "\n"                                                                                                           \
+         "\n!!! Note that this will likely take a long time to complete. Aborting this script before completion may"    \
+         "\n!!! require manual cleanup. See docs for more info."                                                        \
+         "\n"
 }
