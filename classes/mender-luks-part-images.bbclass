@@ -1,26 +1,7 @@
-python () {
-  fstypes = d.getVar('IMAGE_FSTYPES') + " " + d.getVar("ARTIFACTIMG_FSTYPE")
-  handled = set()
-
-  for image_type in fstypes.split():
-    # add encrypt deps, task(s)
-    if not int(d.getVar('MENDER/LUKS_BYPASS_ENCRYPTION', "0")):
-      task = "do_image_%s" % image_type
-  
-      if not bb.data.inherits_class("image", d):
-        continue
-  
-      if task in handled:
-        continue
-
-      d.appendVarFlag(task, "depends", d.expand(' ${MENDER/LUKS_PART_IMAGE_DEPENDS}'))
-      handled.add(task)
-}
-
-################################################################################
 IMAGE_CMD:bootimg:append() {
+  local boot_image="${WORKDIR}/bootfs.${MENDER_BOOT_PART_FSTYPE_TO_GEN}"
   local boot_real_sz="${MENDER_BOOT_PART_SIZE_MB}"
-  local boot_need_sz="${@mender_kernel_calc_dir_size_mb("${WORKDIR}/bootfs.${BB_CURRENTTASK}")}"
+  local boot_need_sz="${@mender_kernel_calc_dir_size_mb("$boot_image")}"
 
   if [ "$boot_real_sz" -le "0" ]; then
     bbfatal "mender-luks requires MENDER_BOOT_PART_SIZE_MB > 0"
@@ -31,7 +12,6 @@ IMAGE_CMD:bootimg:append() {
   fi
 }
 
-################################################################################
 IMAGE_CMD:biosimg:append() {
   do_mender_luks_encrypt_image "biosimg"
 }
