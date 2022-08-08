@@ -74,7 +74,7 @@ trap cleanup EXIT
 ################################################################################
 function _clear_tpm2 {
   # do this one last; it may fail if there is no object to clear
-  tpm2_evictcontrol  -Q --hierarchy=@@MENDER/LUKS_TPM_HIERARCHY@@            \
+  tpm2_evictcontrol  -Q --hierarchy=@@MENDER/LUKS_TPM_HIERARCHY@@      \
                         --object-context=@@MENDER/LUKS_TPM_KEY_INDEX@@
 }
 
@@ -83,9 +83,10 @@ function _read_tpm2 {
   local pcrs
   for pcrs in "${PCR_ARRAY[@]}"
   do
-    if tpm2_unseal -Q --object-context=@@MENDER/LUKS_TPM_KEY_INDEX@@ --auth=pcr:@@MENDER/LUKS_TPM_PCR_ALG@@:$pcrs 2>&1 >/dev/null; then
-       tpm2_unseal -Q --object-context=@@MENDER/LUKS_TPM_KEY_INDEX@@ --auth=pcr:@@MENDER/LUKS_TPM_PCR_ALG@@:$pcrs 1>&3 >$OUTFILE
-       return
+    if   tpm2_unseal -Q --object-context=@@MENDER/LUKS_TPM_KEY_INDEX@@                                              2>&1 >/dev/null; then
+         tpm2_unseal -Q --object-context=@@MENDER/LUKS_TPM_KEY_INDEX@@                                              1>&3 >$OUTFILE ; return
+    elif tpm2_unseal -Q --object-context=@@MENDER/LUKS_TPM_KEY_INDEX@@ --auth=pcr:@@MENDER/LUKS_TPM_PCR_ALG@@:$pcrs 2>&1 >/dev/null; then
+         tpm2_unseal -Q --object-context=@@MENDER/LUKS_TPM_KEY_INDEX@@ --auth=pcr:@@MENDER/LUKS_TPM_PCR_ALG@@:$pcrs 1>&3 >$OUTFILE ; return
     fi
   done
 
@@ -105,41 +106,44 @@ function _write_tpm2 {
 
   local KSIZE="$(wc -c $INFILE | cut -d ' ' -f1)"
   local MSIZE="@@MENDER/LUKS_TPM_KEY_SIZE_MAX@@"
+  local ATTRS="@@MENDER/LUKS_TPM_ATTRIBUTES@@"
 
-  test "$KSIZE" -le "$MSIZE" || fatal "key in $INFILE is > max allowed ($MSIZE)"
+  test "$PCRS"  !=  "$PCRS_NONE" || ATTRS="${ATTRS}|userwithauth"
+  test "$KSIZE" -le "$MSIZE"     || fatal "key in $INFILE is > max allowed ($MSIZE)"
 
   _clear_tpm2 || true
 
-  tpm2_pcrread       -Q @@MENDER/LUKS_TPM_PCR_ALG@@:$PCRS                    \
+  tpm2_pcrread       -Q @@MENDER/LUKS_TPM_PCR_ALG@@:$PCRS             \
                         --output=$PCR_FNAME
 
-  tpm2_createpolicy  -Q --policy-pcr                                         \
-                        --policy=$POLICY_FNAME                               \
-                        --pcr=$PCR_FNAME                                     \
+  tpm2_createpolicy  -Q --policy-pcr                                  \
+                        --policy=$POLICY_FNAME                        \
+                        --pcr=$PCR_FNAME                              \
                         --pcr-list=@@MENDER/LUKS_TPM_PCR_ALG@@:$PCRS
 
   # create and load an object; sealed to policy
-  tpm2_createprimary -Q --hierarchy=@@MENDER/LUKS_TPM_HIERARCHY@@            \
-                        --hash-algorithm=@@MENDER/LUKS_TPM_HASH_ALG@@        \
-                        --key-algorithm=@@MENDER/LUKS_TPM_KEY_ALG@@          \
+  tpm2_createprimary -Q --hierarchy=@@MENDER/LUKS_TPM_HIERARCHY@@     \
+                        --hash-algorithm=@@MENDER/LUKS_TPM_HASH_ALG@@ \
+                        --key-algorithm=@@MENDER/LUKS_TPM_KEY_ALG@@   \
                         --key-context=$PRIMARY_CTX
 
-  tpm2_create        -Q --attributes="@@MENDER/LUKS_TPM_ATTRIBUTES@@"        \
-                        --hash-algorithm=@@MENDER/LUKS_TPM_HASH_ALG@@        \
-                        --public=$TPM_PUB_KEY                                \
-                        --private=$TPM_PRIV_KEY                              \
-                        --parent-context=$PRIMARY_CTX                        \
-                        --policy=$POLICY_FNAME                               \
+  tpm2_create        -Q --attributes=$ATTRS                           \
+                        --hash-algorithm=@@MENDER/LUKS_TPM_HASH_ALG@@ \
+                        --public=$TPM_PUB_KEY                         \
+                        --private=$TPM_PRIV_KEY                       \
+                        --parent-context=$PRIMARY_CTX                 \
+                        --policy=$POLICY_FNAME                        \
                         --sealing-input=$INFILE
 
-  tpm2_load          -Q --public=$TPM_PUB_KEY                                \
-                        --private=$TPM_PRIV_KEY                              \
-                        --parent-context=$PRIMARY_CTX                        \
+  #TODO - try --key-context in tpm2_create and remove tpm2_load
+  tpm2_load          -Q --public=$TPM_PUB_KEY                         \
+                        --private=$TPM_PRIV_KEY                       \
+                        --parent-context=$PRIMARY_CTX                 \
                         --key-context=$LOAD_CTX
 
   # make persistent
-  tpm2_evictcontrol  -Q --hierarchy=@@MENDER/LUKS_TPM_HIERARCHY@@            \
-                        --object-context=$LOAD_CTX                           \
+  tpm2_evictcontrol  -Q --hierarchy=@@MENDER/LUKS_TPM_HIERARCHY@@     \
+                        --object-context=$LOAD_CTX                    \
                         @@MENDER/LUKS_TPM_KEY_INDEX@@
 }
 
