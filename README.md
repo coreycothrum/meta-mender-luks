@@ -19,7 +19,8 @@ Requires [meta-secure-core](https://github.com/jiazhang0/meta-secure-core). See 
 For unattended boot, the LUKS passphrase is loaded/sealed on the TPM2 device. This should be transparent to the user.
 * ``mender-luks-password-agent`` reads key and provides to cryptsetup at boot
 * ``mender-luks-tpm-key-watcher.service`` updates TPM2 when/if the LUKS key changes (on the filesystem)
-* ``mender-luks-tpm-seal-on-boot.service`` reseals to ``MENDER/LUKS_TPM_PCR_SET_MAX`` if no systemd services have failed after ``MENDER/LUKS_SEAL_DELAY_SECS`` (i.e. a successful boot)
+* ``mender-luks-tpm-seal-on-boot.service`` reseals to ``MENDER/LUKS_TPM_PCR_SET_MAX`` if no systemd services have failed after ``MENDER/LUKS_SEAL_DELAY_SECS`` (i.e. a successful boot).
+  Additional systemd dependencies can by added with ```MENDER/LUKS_SEAL_SYSTEMD_AFTER```.
 * ``mender-luks-state-scripts-tpm`` reseals to ``MENDER/LUKS_TPM_PCR_SET_MIN`` after a mender artifact is written
 
 ## Utilities and Services

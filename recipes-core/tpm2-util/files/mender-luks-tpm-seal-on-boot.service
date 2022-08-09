@@ -1,7 +1,7 @@
 [Unit]
 Description=Seal TPM on Boot
-After=local-fs.target systemd-udev-settle.service
-Requires=local-fs.target systemd-udev-settle.service
+After=multi-user.target @@MENDER/LUKS_SEAL_SYSTEMD_AFTER@@
+Requires=multi-user.target @@MENDER/LUKS_SEAL_SYSTEMD_AFTER@@
 ConditionPathExistsGlob=/dev/tpm*
 
 [Service]
