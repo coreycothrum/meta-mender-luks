@@ -5,7 +5,8 @@ Requires=multi-user.target @@MENDER/LUKS_SEAL_SYSTEMD_AFTER@@
 ConditionPathExistsGlob=/dev/tpm*
 
 [Service]
-Type=simple
+Type=oneshot
+ExecStartPre=@@base_bindir@@/sleep @@MENDER/LUKS_SEAL_DELAY_SECS@@
 ExecStart=@@sbindir@@/mender-luks-tpm-seal-on-boot.sh
 
 TimeoutSec=infinity
