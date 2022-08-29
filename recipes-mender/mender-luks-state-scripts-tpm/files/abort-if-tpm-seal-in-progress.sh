@@ -12,10 +12,12 @@ function fatal {
 }
 
 ################################################################################
-if   systemctl --quiet is-active mender-luks-tpm-seal-on-boot.service > /dev/null 2>&1; then
-  fatal "mender-luks-tpm-seal-on-boot.service is still active. Wait longer before you can update again."
+if   systemctl is-system-running | grep -q "initializing\|starting"   > /dev/null 2>&1; then
+  fatal "system has not finish start-up process. Wait longer before you can update."
+elif systemctl --quiet is-active mender-luks-tpm-seal-on-boot.service > /dev/null 2>&1; then
+  fatal "mender-luks-tpm-seal-on-boot.service is still active. Wait longer before you can update."
 elif systemctl --quiet is-failed mender-luks-tpm-seal-on-boot.service > /dev/null 2>&1; then
-  fatal "mender-luks-tpm-seal-on-boot.service failed. system may be unstable."
+  fatal "mender-luks-tpm-seal-on-boot.service failed. System may be unstable."
 fi
 
 exit
