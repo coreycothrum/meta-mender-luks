@@ -1,11 +1,11 @@
 #!/bin/sh
-set -e
+set -eu
 
 PASSWORD=""
 KEY_SLOT="@@MENDER/LUKS_PRIMARY_KEY_SLOT@@"
 TMP_KEY_FILE="@@MENDER/LUKS_TMP_DIR@@/luks/.luks.new.key"
 LUK_KEY_FILE="@@MENDER/LUKS_KEY_FILE@@"
-DPATH="/dev/disk/by-path"
+DPATH="/dev/disk/by-partuuid"
 CMD=""
 
 ################################################################################
@@ -86,7 +86,7 @@ function _brick {
   for disk in `ls $DPATH`
   do
     local dev="$DPATH/$disk"
-    local part=$( echo $disk | rev | cut -d '-' -f1 | rev )
+    local part=$(echo $(basename $(readlink $dev)) | grep -Eo '[0-9]+' | tail -1)
     local header=$( find @@MENDER/LUKS_HEADER_DIR@@ -iname "*$part*" )
 
     if [ ! -z "$header" ]; then
@@ -107,7 +107,7 @@ function _validate_password {
   for disk in `ls $DPATH`
   do
     local dev="$DPATH/$disk"
-    local part=$( echo $disk | rev | cut -d '-' -f1 | rev )
+    local part=$(echo $(basename $(readlink $dev)) | grep -Eo '[0-9]+' | tail -1)
     local header=$( find @@MENDER/LUKS_HEADER_DIR@@ -iname "*$part*" )
 
     if [ ! -z "$header" ]; then
@@ -128,15 +128,13 @@ function _set_password {
   for disk in `ls $DPATH`
   do
     local dev="$DPATH/$disk"
-    local part=$( echo $disk | rev | cut -d '-' -f1 | rev )
+    local part=$(echo $(basename $(readlink $dev)) | grep -Eo '[0-9]+' | tail -1)
     local header=$( find @@MENDER/LUKS_HEADER_DIR@@ -iname "*$part*" )
 
     if [ ! -z "$header" ]; then
       if cryptsetup isLuks --header $header $dev; then
-        set +e
         cryptsetup luksAddKey    $dev --header $header --key-slot $KEY_SLOT --key-file @@MENDER/LUKS_KEY_FILE@@ $TMP_KEY_FILE 2>&1 >/dev/null
         cryptsetup luksChangeKey $dev --header $header --key-slot $KEY_SLOT --key-file @@MENDER/LUKS_KEY_FILE@@ $TMP_KEY_FILE
-        set -e
       fi
     fi
   done
@@ -155,16 +153,14 @@ function _reencrypt {
   for disk in `ls $DPATH`
   do
     local dev="$DPATH/$disk"
-    local part=$( echo $disk | rev | cut -d '-' -f1 | rev )
+    local part=$(echo $(basename $(readlink $dev)) | grep -Eo '[0-9]+' | tail -1)
     local header=$( find @@MENDER/LUKS_HEADER_DIR@@ -iname "*$part*" )
 
     if [ ! -z "$header" ]; then
       if cryptsetup isLuks --header $header $dev; then
-        set +e
         cryptsetup --key-file $LUK_KEY_FILE \
                    --header   $header       \
                    reencrypt  $dev
-        set -e
       fi
     fi
   done
