@@ -1,6 +1,7 @@
 ################################################################################
 # mender-luks variables
 ################################################################################
+MENDER/LUKS_BYPASS_REENCRYPT      ??= "0"
 MENDER/LUKS_BYPASS_RANDOM_KEY     ??= "0"
 MENDER/LUKS_PASSWORD_AGENT_CMD    ??= ":"
 

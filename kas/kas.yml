@@ -12,3 +12,4 @@ local_conf_header:
     #
     # MENDER/LUKS_PASSWORD          = "n3w_p@ssw0rd"
     # MENDER/LUKS_BYPASS_RANDOM_KEY = "0"
+    # MENDER/LUKS_BYPASS_REENCRYPT  = "0"

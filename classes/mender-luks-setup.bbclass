@@ -36,12 +36,16 @@ python do_mender_luks_checks() {
     if not bb.utils.contains('DISTRO_FEATURES'              , 'tpm2', True, False, d):
       bb.fatal("MENDER/LUKS_BYPASS_RANDOM_KEY is enabled, but no TPM2 present. This would lock system after first boot with a random, unknown, password.")
 
+  ##############################################################################
+  if       bb.utils.contains('MENDER/LUKS_BYPASS_REENCRYPT' , '0', True, False, d):
+    if not bb.utils.contains('MENDER/LUKS_BYPASS_RANDOM_KEY', '0', True, False, d):
+      bb.fatal("MENDER/LUKS_BYPASS_REENCRYPT is enabled, but MENDER/LUKS_BYPASS_RANDOM_KEY is not. MENDER/LUKS_BYPASS_REENCRYPT requires MENDER/LUKS_BYPASS_RANDOM_KEY.")
+
   passwd         = str(d.getVar('MENDER/LUKS_PASSWORD'        , '')).lower()
   passwd_default = str(d.getVar('MENDER/LUKS_PASSWORD_DEFAULT', '')).lower()
 
   if (passwd in passwd_default) or (passwd_default in passwd):
     bb.fatal("MENDER/LUKS_PASSWORD_DEFAULT (%s) is too similar to default (%s)" % (passwd, passwd_default))
-
 }
 addhandler do_mender_luks_checks
 do_mender_luks_checks[eventmask] = "bb.event.ParseCompleted"

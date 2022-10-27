@@ -82,6 +82,10 @@ The following definitions should be added to ``local.conf`` or ``custom_machine.
     # 1 = @ system boot: do not check LUKS password
     # MENDER/LUKS_BYPASS_RANDOM_KEY  = "1"
 
+    # 0 = @ system boot: reencrypt LUKS master key(s) if password is still set to default value
+    # 1 = @ system boot: do no reencrypt LUKS partitions
+    # MENDER/LUKS_BYPASS_REENCRYPT   = "1"
+
     # PCRs levels to seal TPM2
     # MENDER/LUKS_TPM_PCR_SET_NONE   = "0"
     # MENDER/LUKS_TPM_PCR_SET_MIN    = "0,1"
@@ -101,6 +105,7 @@ Alternatively, a [kas](https://github.com/siemens/kas) file has been provided to
         # define here, or in a custom layer
         MENDER/LUKS_PASSWORD          = "n3w_p@ssw0rd"
         MENDER/LUKS_BYPASS_RANDOM_KEY = "1"
+        MENDER/LUKS_BYPASS_REENCRYPT  = "1"
 
 Additional files in [kas/](kas/) have been provided to selectively turn on some features, such as [TPM2 integration](#tpm2-integration).
 

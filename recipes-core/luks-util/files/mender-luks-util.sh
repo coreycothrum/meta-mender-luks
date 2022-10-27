@@ -152,8 +152,6 @@ function _encrypt {
 }
 
 function _reencrypt {
-  fatal "#TODO _reencrypt() not implemented"
-
   for disk in `ls $DPATH`
   do
     local dev="$DPATH/$disk"
