@@ -133,8 +133,10 @@ function _set_password {
 
     if [ ! -z "$header" ]; then
       if cryptsetup isLuks --header $header $dev; then
+        set +e
         cryptsetup luksAddKey    $dev --header $header --key-slot $KEY_SLOT --key-file @@MENDER/LUKS_KEY_FILE@@ $TMP_KEY_FILE 2>&1 >/dev/null
         cryptsetup luksChangeKey $dev --header $header --key-slot $KEY_SLOT --key-file @@MENDER/LUKS_KEY_FILE@@ $TMP_KEY_FILE
+        set -e
       fi
     fi
   done
