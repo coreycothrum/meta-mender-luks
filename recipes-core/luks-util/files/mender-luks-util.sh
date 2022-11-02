@@ -160,7 +160,8 @@ function _reencrypt {
 
     if [ ! -z "$header" ]; then
       if cryptsetup isLuks --header $header $dev; then
-        cryptsetup --key-file $LUK_KEY_FILE \
+        cryptsetup --key-slot $KEY_SLOT     \
+                   --key-file $LUK_KEY_FILE \
                    --header   $header       \
                    reencrypt  $dev
       fi
