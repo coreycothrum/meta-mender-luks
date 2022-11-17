@@ -14,6 +14,7 @@ RDEPENDS:${PN}   = "            \
                      coreutils  \
                      cracklib   \
                      cryptsetup \
+                     jq         \
                      openssl    \
                    "
 

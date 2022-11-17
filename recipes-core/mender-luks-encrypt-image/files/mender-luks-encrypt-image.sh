@@ -57,12 +57,14 @@ function mender_luks_encrypt_part {
 
   local LUKS_KEYFILE="${WORKDIR}/key.$(openssl rand -hex 32).luks"
   local LUKS_MASTER_KEYFILE="${WORKDIR}/master.key.$(openssl rand -hex 32).luks"
+  local LUKS_KEYSLOT="@@MENDER/LUKS_PRIMARY_KEY_SLOT@@"
 
   echo -n "@@MENDER/LUKS_PASSWORD@@" > "${LUKS_KEYFILE}"
 
   cryptsetup @@MENDER/LUKS_CRYPTSETUP_OPTS_BASE@@   \
       --dump-master-key                             \
       --master-key-file    "${LUKS_MASTER_KEYFILE}" \
+      --key-slot           "${LUKS_KEYSLOT}"        \
       --key-file           "${LUKS_KEYFILE}"        \
       --header             "${HEADER}"              \
       luksDump "/dev/zero"
@@ -70,6 +72,7 @@ function mender_luks_encrypt_part {
   @@MENDER/LUKS_SUDO_CMD@@                          \
   cryptsetup @@MENDER/LUKS_CRYPTSETUP_OPTS_SPECS@@  \
       --master-key-file    "${LUKS_MASTER_KEYFILE}" \
+      --key-slot           "${LUKS_KEYSLOT}"        \
       --key-file           "${LUKS_KEYFILE}"        \
       --header             "${HEADER}"              \
       reencrypt --encrypt  "${DEV}" "${DM_NAME}"

@@ -90,7 +90,7 @@ function _brick {
     local header=$( find @@MENDER/LUKS_HEADER_DIR@@ -iname "*$part*" )
 
     if [ ! -z "$header" ]; then
-      if cryptsetup isLuks --header $header $dev; then
+      if cryptsetup isLuks   $dev --header $header; then
         set +e
         cryptsetup luksErase $dev --header $header
         set -e
@@ -111,7 +111,7 @@ function _validate_password {
     local header=$( find @@MENDER/LUKS_HEADER_DIR@@ -iname "*$part*" )
 
     if [ ! -z "$header" ]; then
-      if cryptsetup isLuks --header $header $dev; then
+      if cryptsetup isLuks $dev --header $header; then
         set +e
         if ! cryptsetup luksOpen $dev --test-passphrase --header $header --key-file $TMP_KEY_FILE; then
 	  fatal "not a known passphrase for $dev"
@@ -132,10 +132,18 @@ function _set_password {
     local header=$( find @@MENDER/LUKS_HEADER_DIR@@ -iname "*$part*" )
 
     if [ ! -z "$header" ]; then
-      if cryptsetup isLuks --header $header $dev; then
-        set +e
-        cryptsetup luksAddKey    $dev --header $header --key-slot $KEY_SLOT --key-file @@MENDER/LUKS_KEY_FILE@@ $TMP_KEY_FILE 2>&1 >/dev/null
-        cryptsetup luksChangeKey $dev --header $header --key-slot $KEY_SLOT --key-file @@MENDER/LUKS_KEY_FILE@@ $TMP_KEY_FILE
+      if cryptsetup isLuks $dev --header $header; then
+         set +e
+         cryptsetup luksAddKey    $dev --header $header --key-slot $KEY_SLOT --key-file $LUK_KEY_FILE $TMP_KEY_FILE
+         cryptsetup luksChangeKey $dev --header $header --key-slot $KEY_SLOT --key-file $LUK_KEY_FILE $TMP_KEY_FILE
+slots=($(cryptsetup luksDump      $dev --header $header --key-slot $KEY_SLOT --key-file               $TMP_KEY_FILE --dump-json-metadata | jq -r '.keyslots | keys | @sh' | tr -d [:alpha:][:punct:]))
+         for slot in "${slots[@]}"; do
+           if   [ "$slot" == "@@MENDER/LUKS_PRIMARY_KEY_SLOT@@"  ]; then :
+           elif [ "$slot" == "@@MENDER/LUKS_RECOVERY_KEY_SLOT@@" ]; then :
+           else
+             cryptsetup luksKillSlot $dev $slot --header $header --key-file $TMP_KEY_FILE
+           fi
+         done
         set -e
       fi
     fi
@@ -159,11 +167,12 @@ function _reencrypt {
     local header=$( find @@MENDER/LUKS_HEADER_DIR@@ -iname "*$part*" )
 
     if [ ! -z "$header" ]; then
-      if cryptsetup isLuks --header $header $dev; then
-        cryptsetup --key-slot $KEY_SLOT     \
+      if cryptsetup isLuks $dev --header $header; then
+        cryptsetup reencrypt  $dev          \
+                   --key-slot $KEY_SLOT     \
                    --key-file $LUK_KEY_FILE \
                    --header   $header       \
-                   reencrypt  $dev
+                   --progress-frequency 30
       fi
     fi
   done
