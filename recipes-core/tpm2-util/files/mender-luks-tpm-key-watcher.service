@@ -1,7 +1,7 @@
 [Unit]
 Description=Seal new key to TPM
-After=local-fs.target systemd-udev-settle.service mender-luks-tpm-seal-on-boot.service
-Requires=local-fs.target systemd-udev-settle.service
+After=local-fs.target mender-luks-tpm-seal-on-boot.service
+Requires=local-fs.target
 ConditionPathExistsGlob=/dev/tpm*
 
 [Service]
