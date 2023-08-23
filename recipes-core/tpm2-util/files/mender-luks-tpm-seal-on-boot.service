@@ -1,7 +1,7 @@
 [Unit]
 Description=Seal TPM on Boot
-After=multi-user.target @@MENDER/LUKS_SEAL_SYSTEMD_AFTER@@
-Requires=multi-user.target @@MENDER/LUKS_SEAL_SYSTEMD_AFTER@@
+After=data.mount multi-user.target systemd-modules-load.service @@MENDER/LUKS_SEAL_SYSTEMD_AFTER@@
+Requires=data.mount multi-user.target systemd-modules-load.service @@MENDER/LUKS_SEAL_SYSTEMD_AFTER@@
 ConditionPathExistsGlob=/dev/tpm*
 
 [Service]

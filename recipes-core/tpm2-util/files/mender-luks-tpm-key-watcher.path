@@ -1,3 +1,7 @@
+[Unit]
+After=data.mount
+Requires=data.mount
+
 [Path]
 PathChanged=@@MENDER/LUKS_KEY_FILE@@
 MakeDirectory=True
