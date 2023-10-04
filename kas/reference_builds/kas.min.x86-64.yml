@@ -1,7 +1,7 @@
 header:
-  version : 1
+  version : 14
   includes:
-    - ../kas.yml
+    - kas/kas.yml
 
 machine: genericx86-64
 distro : poky

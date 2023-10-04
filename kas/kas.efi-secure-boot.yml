@@ -1,6 +1,6 @@
 header:
-  version : 1
+  version : 14
   includes:
     - repo: meta-mender-kernel
       file: kas/kas.efi-secure-boot.yml
-    - kas.yml
+    - kas/kas.yml

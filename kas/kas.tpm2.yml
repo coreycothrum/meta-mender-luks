@@ -1,9 +1,9 @@
 header:
-  version : 1
+  version : 14
   includes:
     - repo: meta-mender-kernel
       file: kas/meta-secure-core.yml
-    - kas.yml
+    - kas/kas.yml
 
 local_conf_header:
   05_tpm2: |

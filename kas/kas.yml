@@ -1,7 +1,7 @@
 header:
-  version : 1
+  version : 14
   includes:
-    - meta.yml
+    - kas/meta.yml
 
 local_conf_header:
   00_meta-mender-luks: |

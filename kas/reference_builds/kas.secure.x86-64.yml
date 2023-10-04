@@ -1,9 +1,9 @@
 header:
-  version : 1
+  version : 14
   includes:
-    - ../kas.efi-secure-boot.yml
-    - ../kas.tpm2.yml
-    - kas.min.x86-64.yml
+    - kas/kas.efi-secure-boot.yml
+    - kas/kas.tpm2.yml
+    - kas/reference_builds/kas.min.x86-64.yml
 
 local_conf_header:
   01_meta-mender-luks: |
