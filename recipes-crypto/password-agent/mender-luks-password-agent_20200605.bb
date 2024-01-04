@@ -26,7 +26,7 @@ inherit systemd
 SYSTEMD_AUTO_ENABLE   = "enable"
 SYSTEMD_SERVICE:${PN} = "mender-luks-password-agent.path"
 
-LDFLAGS += "-L=/usr/lib -linihcpp -linih"
+LDFLAGS += "-L=/usr/lib -lINIReader -linih"
 
 do_compile() {
   ${CXX} ${WORKDIR}/mender-luks-password-agent.cpp \
