@@ -41,7 +41,7 @@ else
   fatal "$BOOT_PART is not a known/valid rootfs partition"
 fi
 
-log "@@MENDER_STORAGE_DEVICE_BASE@@$ROOT_PART found as candidate rootfs partition"
+log "found candidate rootfs partition: $ROOT_PART"
 
 if ! mount |        grep -q $ROOT_MNT_DIR; then
   mkdir -p                  $ROOT_MNT_DIR
