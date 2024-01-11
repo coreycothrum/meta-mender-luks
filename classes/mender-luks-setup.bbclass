@@ -20,9 +20,6 @@ python do_mender_luks_checks() {
   elif bb.utils.contains('MENDER_FEATURES_ENABLE', 'mender-uboot'      , True, False, d):
     bb.fatal("mender-luks does not currently support mender-uboot")
 
-  elif bb.utils.contains('MENDER_FEATURES_ENABLE', 'mender-partuuid'   , True, False, d):
-    bb.fatal("mender-luks does not currently support mender-partuuid")
-
   ##############################################################################
   if not bb.utils.contains('DISTRO_FEATURES', 'systemd', True, False, d):
     bb.fatal("mender-luks requires systemd")

@@ -25,6 +25,13 @@ BOOT_DEV=@@MENDER_BOOT_PART@@
 DATA_MNT="$MNT_DIR@@MENDER_DATA_PART_MOUNT_LOCATION@@"
 DATA_DEV=@@MENDER_DATA_PART@@
 
+if @@MENDER/LUKS_PARTUUID_IS_USED@@; then
+	BOOT_DEV=$(findfs PARTUUID="$(basename @@MENDER_BOOT_PART@@)")
+	# This is currently ununsed
+	DATA_DEV=$(findfs PARTUUID="$(basename @@MENDER_DATA_PART@@)")
+fi
+
+
 ROOT_DM_NAME=""
 ROOT_HEADER=""
 
@@ -63,18 +70,32 @@ read_args() {
 
 map_root_dev() {
   # determine which rootfs to mount
+
+  if @@MENDER/LUKS_PARTUUID_IS_USED@@; then
+    MENDER_ROOTFS_PART_A=PARTUUID="$(basename @@MENDER_ROOTFS_PART_A@@)"
+    MENDER_ROOTFS_PART_B=PARTUUID="$(basename @@MENDER_ROOTFS_PART_B@@)"
+  else
+    MENDER_ROOTFS_PART_A=@@MENDER_ROOTFS_PART_A@@
+    MENDER_ROOTFS_PART_B=@@MENDER_ROOTFS_PART_B@@
+  fi
+
   case $ROOT_DEV in
-    @@MENDER_ROOTFS_PART_A@@)
+    $MENDER_ROOTFS_PART_A)
       ROOT_DM_NAME=@@MENDER/LUKS_ROOTFS_PART_A_DM_NAME@@
       ROOT_HEADER=@@MENDER/LUKS_ROOTFS_PART_A_HEADER@@
       ;;
-    @@MENDER_ROOTFS_PART_B@@)
+    $MENDER_ROOTFS_PART_B)
       ROOT_DM_NAME=@@MENDER/LUKS_ROOTFS_PART_B_DM_NAME@@
       ROOT_HEADER=@@MENDER/LUKS_ROOTFS_PART_B_HEADER@@
       ;;
     *)
       fatal "unknown root=$ROOT_DEV"
   esac
+
+
+  if @@MENDER/LUKS_PARTUUID_IS_USED@@; then
+    ROOT_DEV=$(findfs $ROOT_DEV)
+  fi
 }
 
 unlock_luks_partitions() {
