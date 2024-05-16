@@ -72,6 +72,7 @@ MENDER/LUKS_TPM_HASH_ALG          ??= "sha256"
 MENDER/LUKS_TPM_PCR_SET_NONE      ??= "0"
 MENDER/LUKS_TPM_PCR_SET_MIN       ??= "0,1"
 MENDER/LUKS_TPM_PCR_SET_MAX       ??= "0,1,2,3,4,5"
+MENDER/LUKS_TPM_PCR_UPDATE_UNLOCK ??= "min"
 
 python () {
   if bb.utils.contains('DISTRO_FEATURES', 'tpm2', True, False, d):
