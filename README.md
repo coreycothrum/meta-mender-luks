@@ -18,10 +18,11 @@ Requires [meta-secure-core](https://github.com/jiazhang0/meta-secure-core). See 
 
 For unattended boot, the LUKS passphrase is loaded/sealed on the TPM2 device. This should be transparent to the user.
 * ``mender-luks-password-agent`` reads key and provides to cryptsetup at boot
-* ``mender-luks-tpm-key-watcher.service`` updates TPM2 when/if the LUKS key changes (on the filesystem)
-* ``mender-luks-tpm-seal-on-boot.service`` reseals to ``MENDER/LUKS_TPM_PCR_SET_MAX`` if no systemd services have failed after ``MENDER/LUKS_SEAL_DELAY_SECS`` (i.e. a successful boot).
-  Additional systemd dependencies can by added with ```MENDER/LUKS_SEAL_SYSTEMD_AFTER```.
-* ``mender-luks-state-scripts-tpm`` reseals to ``MENDER/LUKS_TPM_PCR_SET_MIN`` after a mender artifact is written
+* ``mender-luks-tpm-key-watcher.service`` updates TPM2 when/if the LUKS key (file, on the filesystem) changes
+* mender updates:
+  * ``mender-luks-state-scripts-tpm`` unlocks/reseals to ``MENDER/LUKS_TPM_PCR_UPDATE_UNLOCK`` after a mender artifact is installed/written.
+  * After a reboot, ``mender-luks-tpm-seal-on-boot.service`` reseals to ``MENDER/LUKS_TPM_PCR_SET_MAX`` if no systemd services have failed after ``MENDER/LUKS_SEAL_DELAY_SECS`` (i.e. a successful boot).
+    Additional systemd dependencies can by added with ```MENDER/LUKS_SEAL_SYSTEMD_AFTER```.
 
 ## Utilities and Services
 ### luks-util
@@ -76,20 +77,22 @@ The following definitions should be added to ``local.conf`` or ``custom_machine.
 
     require conf/include/mender-luks.inc
 
-    MENDER/LUKS_PASSWORD             = "n3w_p@ssw0rd"
+    MENDER/LUKS_PASSWORD                = "n3w_p@ssw0rd"
 
     # 0 = @ system boot: randomize LUKS password if weak or still set to default value
     # 1 = @ system boot: do not check LUKS password
-    # MENDER/LUKS_BYPASS_RANDOM_KEY  = "1"
+    # MENDER/LUKS_BYPASS_RANDOM_KEY     = "1"
 
     # 0 = @ system boot: reencrypt LUKS master key(s) if password is still set to default value
     # 1 = @ system boot: do no reencrypt LUKS partitions
-    # MENDER/LUKS_BYPASS_REENCRYPT   = "1"
+    # MENDER/LUKS_BYPASS_REENCRYPT      = "1"
 
     # PCRs levels to seal TPM2
-    # MENDER/LUKS_TPM_PCR_SET_NONE   = "0"
-    # MENDER/LUKS_TPM_PCR_SET_MIN    = "0,1"
-    # MENDER/LUKS_TPM_PCR_SET_MAX    = "0,1,2,3,4,5"
+    # unlock options: none | min | max | N,N,N
+    # MENDER/LUKS_TPM_PCR_SET_NONE      = "0"
+    # MENDER/LUKS_TPM_PCR_SET_MIN       = "0,1"
+    # MENDER/LUKS_TPM_PCR_SET_MAX       = "0,1,2,3,4,5"
+    # MENDER/LUKS_TPM_PCR_UPDATE_UNLOCK = "min"
 
 #### kas
 Alternatively, a [kas](https://github.com/siemens/kas) file has been provided to help with setup/config. [Include](https://kas.readthedocs.io/en/latest/userguide.html#including-configuration-files-from-other-repos) `kas/kas.yml` from this layer in the top level kas file. E.g.:
