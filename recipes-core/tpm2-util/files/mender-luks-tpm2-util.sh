@@ -15,6 +15,7 @@ PCRS_NONE="@@MENDER/LUKS_TPM_PCR_SET_NONE@@"
 PCRS_MIN="@@MENDER/LUKS_TPM_PCR_SET_MIN@@"
 PCRS_MAX="@@MENDER/LUKS_TPM_PCR_SET_MAX@@"
 PCRS=$PCRS_MAX
+NONE=false
 
 # temp/working files; these will be deleted on exit
 PCR_FNAME="@@MENDER/LUKS_TMP_DIR@@/tpm/.pcrs"
@@ -32,11 +33,11 @@ function usage {
   echo "    --help    | -h           # display this prompt                                                  "
   echo "    --debug   | -d           # do not suppress output; may interfere with --read output             "
   echo "    --pcrs    | -p PCR_LIST  # PCR values to seal/unseal with                                       "
-  echo "                             # PCR_LIST choices:                                                    "
-  echo "                             #   none          : $PCRS_NONE                                         "
-  echo "                             #   min           : $PCRS_MIN                                          "
-  echo "                             #   max  (default): $PCRS_MAX                                          "
-  echo "                             #   N1,N2,..,NN   : numerical, comma separated list                    "
+  echo "                             # PCR_LIST options :                                                   "
+  echo "                             #   none           : $PCRS_NONE # none will seal w/o the userwithauth attribute "
+  echo "                             #   min            : $PCRS_MIN                                         "
+  echo "                             #   max  (default) : $PCRS_MAX                                         "
+  echo "                             #   N1,N2,..,NN    : numerical, comma separated list                   "
   echo "    --infile  | -i FILENAME  # read  LUKS key from this file                                        "
   echo "                             # default: @@MENDER/LUKS_KEY_FILE@@                                    "
   echo "    --outfile | -o FILENAME  # write LUKS key (output of --read) to this file                       "
@@ -108,8 +109,8 @@ function _write_tpm2 {
   local MSIZE="@@MENDER/LUKS_TPM_KEY_SIZE_MAX@@"
   local ATTRS="@@MENDER/LUKS_TPM_ATTRIBUTES@@"
 
-  test "$PCRS"  !=  "$PCRS_NONE" || ATTRS="${ATTRS}|userwithauth"
-  test "$KSIZE" -le "$MSIZE"     || fatal "key in $INFILE is > max allowed ($MSIZE)"
+  $NONE                      || ATTRS="${ATTRS}|userwithauth"
+  test "$KSIZE" -le "$MSIZE" || fatal "key in $INFILE is > max allowed ($MSIZE)"
 
   _clear_tpm2 || true
 
@@ -160,12 +161,14 @@ do
   case $1 in
     "--pcrs"|"-p")    case $2 in
                         "none") PCRS=$PCRS_NONE
+                                NONE=true
                                 ;;
                         "min")  PCRS=$PCRS_MIN
                                 ;;
                         "max")  PCRS=$PCRS_MAX
                                 ;;
                         *)      PCRS="$2"
+                                ;;
                       esac             ; shift ; shift ;;
     "--infile"|"-i")  INFILE="$2"      ; shift ; shift ;;
     "--outfile"|"-o") OUTFILE="$2"     ; shift ; shift ;;
@@ -178,11 +181,11 @@ do
   esac
 done
 
-# suppress all output by default, 
+echo "$PCRS" | grep -E -q "^[[:digit:]]+(,[[:digit:]]+)*$" || fatal "$PCRS : invalid PCR format; must be a numerical, comma seperated list"
+
+# suppress all output by default...
 # --read needs to reliably pipe stdout to cryptsetup --key-file=-
 $DEBUG_FLAG || exec 2>&1 >/dev/null
-
-echo "$PCRS" | grep -E -q "^[[:digit:]]+(,[[:digit:]]+)*$" || fatal "$PCRS : invalid PCR format; must be a numerical, comma seperated list"
 
 cleanup
 
