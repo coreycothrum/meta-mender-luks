@@ -34,7 +34,7 @@ function usage {
   echo "    --debug   | -d           # do not suppress output; may interfere with --read output             "
   echo "    --pcrs    | -p PCR_LIST  # PCR values to seal/unseal with                                       "
   echo "                             # PCR_LIST options :                                                   "
-  echo "                             #   none           : $PCRS_NONE # none will seal w/o the userwithauth attribute "
+  echo "                             #   none           : $PCRS_NONE # none will seal w/ the userwithauth attribute "
   echo "                             #   min            : $PCRS_MIN                                         "
   echo "                             #   max  (default) : $PCRS_MAX                                         "
   echo "                             #   N1,N2,..,NN    : numerical, comma separated list                   "
@@ -109,7 +109,7 @@ function _write_tpm2 {
   local MSIZE="@@MENDER/LUKS_TPM_KEY_SIZE_MAX@@"
   local ATTRS="@@MENDER/LUKS_TPM_ATTRIBUTES@@"
 
-  $NONE                      || ATTRS="${ATTRS}|userwithauth"
+  $NONE                      && ATTRS="${ATTRS}|userwithauth"
   test "$KSIZE" -le "$MSIZE" || fatal "key in $INFILE is > max allowed ($MSIZE)"
 
   _clear_tpm2 || true
