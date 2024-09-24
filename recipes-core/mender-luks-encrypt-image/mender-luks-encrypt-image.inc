@@ -15,8 +15,8 @@ FILES:${PN}    = "                                         \
 RDEPENDS:${PN} = "                     \
                    bash                \
                    bash-native         \
-                   bmap-tools          \
-                   bmap-tools-native   \
+                   bmaptool            \
+                   bmaptool-native     \
                    coreutils           \
                    coreutils-native    \
                    cryptsetup          \
