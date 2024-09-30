@@ -1,6 +1,17 @@
 ################################################################################
 # mender-luks variables
 ################################################################################
+MENDER/LUKS_INIT_PASSWORD_DEFAULT          = "password"
+MENDER/LUKS_INIT_PASSWORD                ??= "${MENDER/LUKS_INIT_PASSWORD_DEFAULT}"
+MENDER/LUKS_CRYPTENROLL_INIT_PASSWORD    ??= "1"
+MENDER/LUKS_CRYPTENROLL_TPM2             ??= "1"
+MENDER/LUKS_CRYPTENROLL_TPM2_SEALED_PCRS ??= "7+11"
+MENDER/LUKS_CRYPTENROLL_SYSTEMD_AFTER    ??= ""
+MENDER/LUKS_CRYPTENROLL_SYSTEMD_DELAY    ??= "10"
+MENDER/LUKS_TPM2_DEVICE                  ??= "auto"
+MENDER/LUKS_CRYPTTAB_OPTS                ??= "luks,nofail,${@bb.utils.contains('DISTRO_FEATURES', 'tpm2', 'tpm2-device=${MENDER/LUKS_TPM2_DEVICE}', '', d)}"
+
+################################################################################
 MENDER/LUKS_BYPASS_REENCRYPT      ??= "0"
 MENDER/LUKS_BYPASS_RANDOM_KEY     ??= "0"
 MENDER/LUKS_PASSWORD_AGENT_CMD    ??= ":"
