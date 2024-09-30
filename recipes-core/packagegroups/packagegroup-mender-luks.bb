@@ -3,6 +3,7 @@ DESCRIPTION = "meta-mender-luks system packages"
 require packagegroup-mender-luks-common.inc
 
 RDEPENDS:${PN} += "                     \
+  ${MLPREFIX}mender-luks-cryptenroll    \
   ${MLPREFIX}mender-luks-cryptsetup     \
   ${MLPREFIX}mender-luks-luks-util      \
   ${MLPREFIX}mender-luks-password-agent \

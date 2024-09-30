@@ -1,0 +1,16 @@
+[Unit]
+Description=mender-luks cryptenroll key task(s)
+After=data.mount local-fs.target multi-user.target systemd-modules-load.service @@MENDER/LUKS_CRYPTENROLL_SYSTEMD_AFTER@@
+Requires=data.mount local-fs.target multi-user.target systemd-modules-load.service @@MENDER/LUKS_CRYPTENROLL_SYSTEMD_AFTER@@
+
+[Service]
+Type=oneshot
+ExecStartPre=@@base_bindir@@/sleep @@MENDER/LUKS_CRYPTENROLL_SYSTEMD_DELAY@@
+ExecStart=@@sbindir@@/mender-luks-cryptenroll.sh
+
+TimeoutSec=infinity
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target
