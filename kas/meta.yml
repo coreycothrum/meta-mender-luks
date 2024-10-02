@@ -9,5 +9,5 @@ repos:
 
   meta-mender-kernel:
     url   : "https://github.com/coreycothrum/meta-mender-kernel.git"
-    branch: master
-    commit: 92e861333b235df392453902d5efd0986ad48435
+    branch: kirkstone
+    commit: db36dc9da1304b91a9864291ab571a27fa726a4e
