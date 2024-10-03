@@ -26,9 +26,17 @@ DATA_MNT="$MNT_DIR@@MENDER_DATA_PART_MOUNT_LOCATION@@"
 DATA_DEV=@@MENDER_DATA_PART@@
 
 if @@MENDER/LUKS_PARTUUID_IS_USED@@; then
-	BOOT_DEV=$(findfs PARTUUID="$(basename @@MENDER_BOOT_PART@@)")
-	# This is currently ununsed
-	DATA_DEV=$(findfs PARTUUID="$(basename @@MENDER_DATA_PART@@)")
+    BOOT_DEV=$(findfs PARTUUID="$(basename @@MENDER_BOOT_PART@@)")
+    DATA_DEV=$(findfs PARTUUID="$(basename @@MENDER_DATA_PART@@)")
+    MENDER_ROOTFS_PART_A=PARTUUID="$(basename @@MENDER_ROOTFS_PART_A@@)"
+    MENDER_ROOTFS_PART_B=PARTUUID="$(basename @@MENDER_ROOTFS_PART_B@@)"
+    ROOT_A_DEV=$(findfs $MENDER_ROOTFS_PART_A)
+    ROOT_B_DEV=$(findfs $MENDER_ROOTFS_PART_B)
+else
+    MENDER_ROOTFS_PART_A=@@MENDER_ROOTFS_PART_A@@
+    MENDER_ROOTFS_PART_B=@@MENDER_ROOTFS_PART_B@@
+    ROOT_A_DEV=$MENDER_ROOTFS_PART_A
+    ROOT_B_DEV=$MENDER_ROOTFS_PART_B
 fi
 
 
@@ -70,31 +78,48 @@ read_args() {
 
 map_root_dev() {
   # determine which rootfs to mount
-
-  if @@MENDER/LUKS_PARTUUID_IS_USED@@; then
-    MENDER_ROOTFS_PART_A=PARTUUID="$(basename @@MENDER_ROOTFS_PART_A@@)"
-    MENDER_ROOTFS_PART_B=PARTUUID="$(basename @@MENDER_ROOTFS_PART_B@@)"
-  else
-    MENDER_ROOTFS_PART_A=@@MENDER_ROOTFS_PART_A@@
-    MENDER_ROOTFS_PART_B=@@MENDER_ROOTFS_PART_B@@
-  fi
-
   case $ROOT_DEV in
     $MENDER_ROOTFS_PART_A)
       ROOT_DM_NAME=@@MENDER/LUKS_ROOTFS_PART_A_DM_NAME@@
       ROOT_HEADER=@@MENDER/LUKS_ROOTFS_PART_A_HEADER@@
-      ;;
+      ROOT_DEV=$ROOT_A_DEV;;
     $MENDER_ROOTFS_PART_B)
       ROOT_DM_NAME=@@MENDER/LUKS_ROOTFS_PART_B_DM_NAME@@
       ROOT_HEADER=@@MENDER/LUKS_ROOTFS_PART_B_HEADER@@
-      ;;
+      ROOT_DEV=$ROOT_B_DEV;;
     *)
       fatal "unknown root=$ROOT_DEV"
   esac
+}
 
+mender_luks_encrypt_part() {
+  local DEV="$1"
+  local DM_NAME="$2"
+  local HEADER="$3"
 
-  if @@MENDER/LUKS_PARTUUID_IS_USED@@; then
-    ROOT_DEV=$(findfs $ROOT_DEV)
+  if   [ ! -f "$HEADER" ]; then
+    fatal "mender_luks_encrypt_part::header($HEADER) does not exist; cannot encrypt"
+  elif [ ! -b "$DEV" ]; then
+    fatal "mender_luks_encrypt_part::device($DEV)    does not exist; cannot encrypt"
+  elif [   -z "$DM_NAME" ]; then
+    fatal "mender_luks_encrypt_part: missing function parameter DM_NAME"
+  fi
+
+  local LUKS_KEYSLOT="@@MENDER/LUKS_PRIMARY_KEY_SLOT@@"
+
+  # Assume if type is recognized, this means encryption was not yet started
+  if blkid $DEV | grep "TYPE=" 2>&1 >/dev/null; then
+    log "Initializing encryption on $DEV"
+
+    echo -n "@@MENDER/LUKS_PASSWORD@@" | cryptsetup @@MENDER/LUKS_CRYPTSETUP_OPTS_SPECS@@  \
+      --key-slot           "${LUKS_KEYSLOT}"        \
+      --key-file           -                        \
+      --header             "${HEADER}"              \
+      reencrypt --encrypt  "${DEV}" "${DM_NAME}"
+
+    cryptsetup luksClose ${DM_NAME}
+  else
+    log "$DEV is already encrypted"
   fi
 }
 
@@ -145,6 +170,22 @@ unlock_luks_partitions() {
 ################################################################################
 mkdir -p           $BOOT_MNT
 mount    $BOOT_DEV $BOOT_MNT
+
+# Ensure we have enough entropy on case we have yet to encrypt all partitions
+dd if=/dev/random of=/dev/null bs=16 count=1 status=none
+
+# The following encryption commands will only encrypt the partition if it is not yet encrypted
+mender_luks_encrypt_part $DATA_DEV \
+		   "@@MENDER/LUKS__DATA__PART___DM_NAME@@"   \
+		   "$(find $BOOT_MNT -name @@MENDER/LUKS__DATA__PART___HEADER_NAME@@)"
+
+mender_luks_encrypt_part $ROOT_A_DEV \
+		   "@@MENDER/LUKS_ROOTFS_PART_A_DM_NAME@@"       \
+		   "$(find $BOOT_MNT -name @@MENDER/LUKS_ROOTFS_PART_A_HEADER_NAME@@)"
+
+mender_luks_encrypt_part $ROOT_B_DEV \
+		   "@@MENDER/LUKS_ROOTFS_PART_B_DM_NAME@@"       \
+		   "$(find $BOOT_MNT -name @@MENDER/LUKS_ROOTFS_PART_B_HEADER_NAME@@)"
 
 read_args && map_root_dev && unlock_luks_partitions
 
