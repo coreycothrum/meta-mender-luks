@@ -12,7 +12,7 @@ ROOTFS                                   = ""
 IMAGE_FSTYPES:remove                     = " ${MENDER/LUKS_DENY_IMAGE_TYPES}"
 
 ################################################################################
-DISTRO_FEATURES:append                   = " systemd pam"
+DISTRO_FEATURES:append                   = " luks systemd pam"
 DISTRO_FEATURES_BACKFILL_CONSIDERED     += "sysvinit"
 VIRTUAL-RUNTIME_login_manager            = "shadow-base"
 VIRTUAL-RUNTIME_init_manager             = "systemd"
