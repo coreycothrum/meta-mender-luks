@@ -3,4 +3,3 @@ header:
   includes:
     - repo: meta-mender-kernel
       file: kas/kas.efi-secure-boot.yml
-    - kas/kas.yml
