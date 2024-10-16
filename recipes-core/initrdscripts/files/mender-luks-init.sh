@@ -2,10 +2,10 @@
 ################################################################################
 PATH=$PATH:/sbin:/bin:/usr/sbin:/usr/bin
 
-mkdir -p /proc ; mount -n -t proc     proc     /proc
-mkdir -p /sys  ; mount -n -t sysfs    sysfs    /sys
 mkdir -p /dev  ; mount -n -t devtmpfs devtmpfs /dev
+mkdir -p /proc ; mount -n -t proc     proc     /proc
 mkdir -p /run  ; mount -n -t tmpfs    tmpfs    /run
+mkdir -p /sys  ; mount -n -t sysfs    sysfs    /sys
 
 mknod /dev/console c 5 1
 mknod /dev/null    c 1 3
