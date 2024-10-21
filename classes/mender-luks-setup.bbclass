@@ -29,20 +29,20 @@ python do_mender_luks_checks() {
     bb.fatal("mender-luks does not currently support TPM (1.0)")
 
   ##############################################################################
-  if       bb.utils.contains('MENDER/LUKS_BYPASS_RANDOM_KEY', '0'   , True, False, d):
-    if not bb.utils.contains('DISTRO_FEATURES'              , 'tpm2', True, False, d):
-      bb.fatal("MENDER/LUKS_BYPASS_RANDOM_KEY is enabled, but no TPM2 present. This would lock system after first boot with a random, unknown, password.")
+  reencrypt_on_init       = (d.getVar("MENDER/LUKS_REENCRYPT_ON_INIT")                   == "1")
+  use_passwd              = (d.getVar("MENDER/LUKS_CRYPTENROLL_PASSWORD")                == "1")
+  use_passwd_wipe_on_init = (d.getVar("MENDER/LUKS_CRYPTENROLL_PASSWORD_WIPE_ON_INIT")   == "1")
+  use_passwd_forbid_empty = (d.getVar("MENDER/LUKS_CRYPTENROLL_PASSWORD_FORBID_EMPTY")   == "1")
+  use_passwd_strong       = (d.getVar("MENDER/LUKS_CRYPTENROLL_PASSWORD_ENFORCE_STRONG") == "1")
+  use_tpm2                = (d.getVar("MENDER/LUKS_CRYPTENROLL_TPM2")                    == "1")
+  unattended_boot         = use_tpm2
 
-  ##############################################################################
-  if       bb.utils.contains('MENDER/LUKS_BYPASS_REENCRYPT' , '0', True, False, d):
-    if not bb.utils.contains('MENDER/LUKS_BYPASS_RANDOM_KEY', '0', True, False, d):
-      bb.fatal("MENDER/LUKS_BYPASS_REENCRYPT is enabled, but MENDER/LUKS_BYPASS_RANDOM_KEY is not. MENDER/LUKS_BYPASS_REENCRYPT requires MENDER/LUKS_BYPASS_RANDOM_KEY.")
+  if use_passwd_strong and not use_passwd_forbid_empty:
+    bb.warn("MENDER/LUKS_CRYPTENROLL_PASSWORD_ENFORCE_STRONG is set, but MENDER/LUKS_CRYPTENROLL_PASSWORD_FORBID_EMPTY is not... an empty password will be allowed...");
 
-  passwd         = str(d.getVar('MENDER/LUKS_PASSWORD'        , '')).lower()
-  passwd_default = str(d.getVar('MENDER/LUKS_PASSWORD_DEFAULT', '')).lower()
-
-  if (passwd in passwd_default) or (passwd_default in passwd):
-    bb.fatal("MENDER/LUKS_PASSWORD_DEFAULT (%s) is too similar to default (%s)" % (passwd, passwd_default))
+  if not unattended_boot:
+    if not use_passwd              : bb.fatal("LUKS partition(s) will init with only a random recovery key. May not be able to boot after init.")
+    if     use_passwd_wipe_on_init : bb.warn ("LUKS partition(s) will init with only a random recovery key. May not be able to boot after init.")
 }
 addhandler do_mender_luks_checks
 do_mender_luks_checks[eventmask] = "bb.event.ParseCompleted"

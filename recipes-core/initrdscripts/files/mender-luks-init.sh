@@ -38,8 +38,6 @@ ROOT_HEADER=""
 DATA_DM_NAME=@@MENDER/LUKS__DATA__PART___DM_NAME@@
 DATA_HEADER=@@MENDER/LUKS__DATA__PART___HEADER@@
 
-LUKS_KEY="$MNT_DIR/@@MENDER/LUKS_KEY_FILE@@"
-
 ################################################################################
 debug_shell() {
   log "exitting to debug shell"
@@ -114,7 +112,6 @@ unlock_luks_partitions() {
   for try in $RETRY_COUNT:
   do
     local CMD="$CMD_PREPEND cryptsetup luksOpen                             \
-                                       @@MENDER/LUKS_CRYPTSETUP_OPTS_BASE@@ \
                                        --header $MNT_DIR/$ROOT_HEADER       \
                                        $KEY_VS_PROMPT                       \
                                        $ROOT_DEV                            \
