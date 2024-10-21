@@ -6,7 +6,7 @@ export TPM2TOOLS_TCTI="@@MENDER/LUKS_TPM2TOOLS_TCTI_NAME@@:@@MENDER/LUKS_TPM2TOO
 export TPM2TOOLS_TCTI_NAME="@@MENDER/LUKS_TPM2TOOLS_TCTI_NAME@@"
 export TPM2TOOLS_DEVICE_FILE="@@MENDER/LUKS_TPM2TOOLS_DEVICE_FILE@@"
 
-INFILE="@@MENDER/LUKS_KEY_FILE@@"
+INFILE="@@MENDER/LUKS_LEGACY_KEY_FILE@@"
 OUTFILE="/proc/self/fd/1"
 
 DEBUG_FLAG=false
@@ -39,7 +39,7 @@ function usage {
   echo "                             #   max  (default) : $PCRS_MAX                                         "
   echo "                             #   N1,N2,..,NN    : numerical, comma separated list                   "
   echo "    --infile  | -i FILENAME  # read  LUKS key from this file                                        "
-  echo "                             # default: @@MENDER/LUKS_KEY_FILE@@                                    "
+  echo "                             # default: @@MENDER/LUKS_LEGACY_KEY_FILE@@                             "
   echo "    --outfile | -o FILENAME  # write LUKS key (output of --read) to this file                       "
   echo "                             # default: stdout (/proc/self/fd/1)                                    "
   echo "                             # !!! WARNING setting this creates a file that may persist !!!         "

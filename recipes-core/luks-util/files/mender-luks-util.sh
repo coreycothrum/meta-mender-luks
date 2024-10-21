@@ -4,7 +4,7 @@ set -eu
 PASSWORD=""
 KEY_SLOT="@@MENDER/LUKS_PRIMARY_KEY_SLOT@@"
 TMP_KEY_FILE="@@MENDER/LUKS_TMP_DIR@@/luks/.luks.new.key"
-LUK_KEY_FILE="@@MENDER/LUKS_KEY_FILE@@"
+LUK_KEY_FILE="@@MENDER/LUKS_LEGACY_KEY_FILE@@"
 DPATH="/dev/disk/by-partuuid"
 CMD=""
 
@@ -195,8 +195,8 @@ fi
 while [ "$#" -gt 0 ]
 do
   case $1 in
-    "--recovery")  KEY_SLOT=@@MENDER/LUKS_RECOVERY_KEY_SLOT@@       \
-	           LUK_KEY_FILE="@@MENDER/LUKS_KEY_FILE@@.recovery" \
+    "--recovery")  KEY_SLOT=@@MENDER/LUKS_RECOVERY_KEY_SLOT@@              \
+	           LUK_KEY_FILE="@@MENDER/LUKS_LEGACY_KEY_FILE@@.recovery" \
 	                                    ; shift         ;;
     "--prompt")    PASSWORD=""              ; shift         ;;
     "--password")  PASSWORD="$2"            ; shift ; shift ;;
