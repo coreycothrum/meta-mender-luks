@@ -35,6 +35,7 @@ MENDER/LUKS_DENY_IMAGE_TYPES        = "             \
                                         wic         \
                                       "
 
+MENDER/LUKS_SYSTEMD_INITRD_CREDENTIALS_DIR = "/run/credentials/@initrd"
 MENDER/LUKS_KEY_FILE                = "${MENDER/LUKS_DATA_DIR}/.key.luks"
 MENDER/LUKS_SEAL_DELAY_SECS       ??= "120"
 MENDER/LUKS_SEAL_SYSTEMD_AFTER    ??= ""
