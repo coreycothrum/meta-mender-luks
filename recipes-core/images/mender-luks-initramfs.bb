@@ -1,7 +1,7 @@
 SUMMARY                    = "mender-luks initramfs"
 LICENSE                    = "MIT"
 
-export IMAGE_BASENAME      = "${MLPREFIX}mender-luks-initramfs"
+export IMAGE_BASENAME      = "mender-luks-initramfs"
 IMAGE_FEATURES             = ""
 IMAGE_LINGUAS              = ""
 IMAGE_FSTYPES              = "${INITRAMFS_FSTYPES}"

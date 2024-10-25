@@ -1,5 +1,6 @@
-#!/bin/sh
+#!/usr/bin/bash
 ################################################################################
+CONSOLE="/dev/console"
 PATH=$PATH:/sbin:/bin:/usr/sbin:/usr/bin
 
 mkdir -p /dev  ; mount -n -t devtmpfs devtmpfs /dev
@@ -11,9 +12,17 @@ mknod /dev/console c 5 1
 mknod /dev/null    c 1 3
 mknod /dev/zero    c 1 5
 
-################################################################################
-CONSOLE="/dev/console"
+ln -s /proc/self/fd /dev/fd
 
+exec <$CONSOLE >$CONSOLE 2>$CONSOLE
+
+################################################################################
+fatal() {
+  echo "$@" && echo ""
+  exit 1
+}
+
+################################################################################
 MNT_DIR="/tmp"
 
 ROOT_MNT="$MNT_DIR/root"
@@ -25,12 +34,11 @@ BOOT_DEV=@@MENDER_BOOT_PART@@
 DATA_MNT="$MNT_DIR@@MENDER_DATA_PART_MOUNT_LOCATION@@"
 DATA_DEV=@@MENDER_DATA_PART@@
 
-if @@MENDER/LUKS_PARTUUID_IS_USED@@; then
-	BOOT_DEV=$(findfs PARTUUID="$(basename @@MENDER_BOOT_PART@@)")
-	# This is currently ununsed
-	DATA_DEV=$(findfs PARTUUID="$(basename @@MENDER_DATA_PART@@)")
+if [[ "@@MENDER/LUKS_PARTUUID_IS_USED@@" == "1" ]]; then
+  BOOT_DEV=$(findfs PARTUUID="$(basename @@MENDER_BOOT_PART@@)")
+  # This is currently ununsed
+  DATA_DEV=$(findfs PARTUUID="$(basename @@MENDER_DATA_PART@@)")
 fi
-
 
 ROOT_DM_NAME=""
 ROOT_HEADER=""
@@ -39,24 +47,8 @@ DATA_DM_NAME=@@MENDER/LUKS__DATA__PART___DM_NAME@@
 DATA_HEADER=@@MENDER/LUKS__DATA__PART___HEADER@@
 
 ################################################################################
-debug_shell() {
-  log "exitting to debug shell"
-  exec sh <$CONSOLE >$CONSOLE 2>$CONSOLE
-}
-
-log() {
-  echo "$@" >$CONSOLE
-}
-
-fatal() {
-  echo "$@" >$CONSOLE
-  echo      >$CONSOLE
-  exit 1
-}
-
-################################################################################
 read_args() {
-  [ -z "${CMDLINE+x}" ] && CMDLINE=`cat /proc/cmdline`
+  [[ -z "${CMDLINE+x}" ]] && CMDLINE=`cat /proc/cmdline`
   for arg in $CMDLINE; do
     optarg=`expr "x$arg" : 'x[^=]*=\(.*\)' || echo ''`
     case $arg in
@@ -66,10 +58,9 @@ read_args() {
   done
 }
 
+# determine which rootfs to mount
 map_root_dev() {
-  # determine which rootfs to mount
-
-  if @@MENDER/LUKS_PARTUUID_IS_USED@@; then
+  if [[ "@@MENDER/LUKS_PARTUUID_IS_USED@@" == "1" ]]; then
     MENDER_ROOTFS_PART_A=PARTUUID="$(basename @@MENDER_ROOTFS_PART_A@@)"
     MENDER_ROOTFS_PART_B=PARTUUID="$(basename @@MENDER_ROOTFS_PART_B@@)"
   else
@@ -90,53 +81,33 @@ map_root_dev() {
       fatal "unknown root=$ROOT_DEV"
   esac
 
-
-  if @@MENDER/LUKS_PARTUUID_IS_USED@@; then
+  if [[ "@@MENDER/LUKS_PARTUUID_IS_USED@@" == "1" ]]; then
     ROOT_DEV=$(findfs $ROOT_DEV)
   fi
 }
 
 unlock_luks_partitions() {
-  local TPM_READ_CMD="mender-luks-tpm2-util.sh --read"
-  local RETRY_COUNT="1 2"
-  local CMD_PREPEND=""
-  local KEY_VS_PROMPT=""
+  local KEY_FILE="@@MENDER/LUKS_SYSTEMD_INITRD_CREDENTIALS_DIR@@/legacy"
+  local TPM_UTIL="mender-luks-tpm2-util.sh"
 
-  # read key from TPM, if available
-  if eval $TPM_READ_CMD 2>&1 >/dev/null; then
-    local KEY_VS_PROMPT="--key-file=-"
-    local CMD_PREPEND="$TPM_READ_CMD |"
+  install -m 600 -D /dev/null "${KEY_FILE}"
+
+  if command -v "${TPM_UTIL}" 2>&1 >/dev/null; then
+      echo -n "$(${TPM_UTIL} --read)" > "${KEY_FILE}"
   fi
 
-  # unlock, mount rootfs partition
-  for try in $RETRY_COUNT:
-  do
-    local CMD="$CMD_PREPEND cryptsetup luksOpen                             \
-                                       --header $MNT_DIR/$ROOT_HEADER       \
-                                       $KEY_VS_PROMPT                       \
-                                       $ROOT_DEV                            \
-                                       $ROOT_DM_NAME                        "
+  for IDX in {1..3}; do
+    eval cryptsetup --header "$MNT_DIR/$ROOT_HEADER"          \
+               --key-file=${KEY_FILE}                         \
+               luksOpen $ROOT_DEV $ROOT_DM_NAME               \
+    && ROOT_DEV="@@MENDER/LUKS_DM_MAPPER_DIR@@/$ROOT_DM_NAME" \
+    && return 0
 
-    # log "$CMD"
-    # debug_shell
-
-    if eval $CMD; then
-      ROOT_DEV="@@MENDER/LUKS_DM_MAPPER_DIR@@/$ROOT_DM_NAME"
-      return 0
-    fi
-
-    log "!!! Failed to unlock LUKS partition $ROOT_DEV"
-
-    if [ ! -z "$KEY_VS_PROMPT" ]; then
-      log "stored keyfile failed, falling back to manual passphrase input"
-      local CMD_PREPEND=""
-      local KEY_VS_PROMPT=""
-    fi
+    echo "!!! ${ROOT_DEV}: try $IDX to unlock LUKS partition FAILED !!!"
+    read -sp "${ROOT_DEV} current password:" && echo -n "${REPLY}" > "${KEY_FILE}"
   done
 
-  fatal "!!! Failed to unlock LUKS partition $ROOT_DEV"
-
-  return 1
+  fatal "!!! $ROOT_DEV: failed to unlock LUKS partition !!!"
 }
 
 ################################################################################

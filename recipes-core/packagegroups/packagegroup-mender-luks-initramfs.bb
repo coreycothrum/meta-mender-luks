@@ -1,8 +1,8 @@
-DESCRIPTION = "meta-mender-luks initramfs packages"
+DESCRIPTION = "mender-luks initramfs package(s)"
 
 require packagegroup-mender-luks-common.inc
 
-RDEPENDS:${PN} += "                  \
-  ${MLPREFIX}base-passwd             \
-  ${MLPREFIX}mender-luks-init-script \
+RDEPENDS:${PN} += "       \
+  base-passwd             \
+  mender-luks-init-script \
 "
