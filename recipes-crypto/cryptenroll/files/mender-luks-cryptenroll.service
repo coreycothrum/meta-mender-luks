@@ -1,0 +1,15 @@
+[Unit]
+Description=luks cryptenroll task(s)
+After=cryptsetup.target data.mount local-fs.target systemd-modules-load.service
+Requires=cryptsetup.target data.mount local-fs.target systemd-modules-load.service
+
+[Service]
+Type=oneshot
+ExecStart=@@sbindir@@/mender-luks-cryptenroll.sh
+
+TimeoutSec=infinity
+Restart=on-failure
+RestartSec=15s
+
+[Install]
+WantedBy=multi-user.target
