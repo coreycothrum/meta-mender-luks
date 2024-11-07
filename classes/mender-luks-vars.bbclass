@@ -46,7 +46,7 @@ MENDER/LUKS_CRYPTSETUP_KEY_SIZE   ??= "512"
 MENDER/LUKS_CRYPTSETUP_CIPHER     ??= "aes-xts-plain64"
 MENDER/LUKS_CRYPTSETUP_HASH       ??= "sha512"
 MENDER/LUKS_CRYPTSETUP_PBKDF      ??= "argon2i"
-MENDER/LUKS_CRYPTSETUP_OPTS_BASE    = "--type luks2 --batch-mode"
+MENDER/LUKS_CRYPTSETUP_OPTS_BASE    = "--type luks2"
 MENDER/LUKS_CRYPTSETUP_OPTS_SPECS   = "                                                \
                                                    ${MENDER/LUKS_CRYPTSETUP_OPTS_BASE} \
                                         --key-size ${MENDER/LUKS_CRYPTSETUP_KEY_SIZE}  \
