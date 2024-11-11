@@ -83,6 +83,7 @@ for_each_luks_header() {
 luks_close() {
   local NAME="$1"
   eval do_sudo cryptsetup --batch-mode --type luks2 close ${NAME}
+  sync
 }
 
 ################################################################################
@@ -101,6 +102,7 @@ luks_open() {
     --header      "${HEADER}"                       \
     --key-file    "${KEY_FILE}"                     \
     open "${DEV}" "${NAME}"
+  sync
 }
 
 ################################################################################
@@ -124,6 +126,7 @@ luks_change_key() {
     --header               "${HEADER}"              \
     --key-file             "${OLD_KEY_FILE}"        \
     luksChangeKey "${DEV}" "${NEW_KEY_FILE}"
+  sync
 }
 
 ################################################################################
@@ -149,7 +152,7 @@ luks_reencrypt() {
     local ENCRYPT_CMD=""
   fi
 
-  if do_sudo cryptsetup --header "${HEADER}" status "${NAME})"; then
+  if do_sudo cryptsetup --header "${HEADER}" status "${NAME}"; then
     echo "${NAME}:  online cryptsetup-reencrypt"
     local OFFLINE_CMD=""
   else
@@ -163,6 +166,7 @@ luks_reencrypt() {
     --key-file "${KEY_FILE}"                             \
     --progress-frequency 30                              \
     reencrypt "${ENCRYPT_CMD}" "${OFFLINE_CMD}" "${DEV}"
+  sync
 }
 
 ################################################################################

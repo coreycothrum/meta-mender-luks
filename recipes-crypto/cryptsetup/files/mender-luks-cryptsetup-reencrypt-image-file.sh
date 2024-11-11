@@ -20,7 +20,7 @@ BOOT_MNT="${WORKDIR}/@@MENDER_BOOT_PART_MOUNT_LOCATION@@"
 
 ################################################################################
 dmsetup_remove() {
-  do_sudo find /dev/mapper/ -iname "${1}*" -exec dmsetup remove --force {} \;
+  do_sudo find @@MENDER/LUKS_DM_MAPPER_DIR@@ -iname "${1}*" -exec dmsetup remove --force {} \;
 }
 
 cleanup() {
@@ -53,9 +53,9 @@ _do_task() {
   local DEV="$(echo "${DEV}" | sed "s|@@MENDER_STORAGE_DEVICE_BASE@@|${BASE_DEV}p|g")"
   local HEADER="${WORKDIR}/${HEADER}"
 
-  luks_reencrypt  "${NAME}" "${DEV}" "${HEADER}"
-  luks_change_key "${NAME}" "${DEV}" "${HEADER}"
-  luks_open       "${NAME}" "${DEV}" "${HEADER}"
+                            luks_reencrypt  "${NAME}" "${DEV}" "${HEADER}"
+                            luks_change_key "${NAME}" "${DEV}" "${HEADER}"
+  PASSWORD="${NEWPASSWORD}" luks_open       "${NAME}" "${DEV}" "${HEADER}"
 
      [[ ! -v LEGACYPASSWORD ]] && local LEGACYPASSWORD="${NEWPASSWORD}"
   if [[   -v LEGACYPASSWORD ]]; then
