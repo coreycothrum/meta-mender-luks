@@ -10,4 +10,4 @@ repos:
   meta-mender-kernel:
     url   : "https://github.com/coreycothrum/meta-mender-kernel.git"
     branch: kirkstone
-    commit: db36dc9da1304b91a9864291ab571a27fa726a4e
+    commit: 1c2914268df0ce5fe7d015f7c439d3a90d37c4f3
