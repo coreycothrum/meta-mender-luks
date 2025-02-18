@@ -8,21 +8,22 @@ SRC_URI += "      \
   file://crypttab \
 "
 
-FILES:${PN} = "                  \
-  ${sysconfdir}/crypttab         \
-  ${MENDER/LUKS_HEADER_DIR}/     \
-  ${MENDER/LUKS_LEGACY_KEY_FILE} \
+FILES:${PN} = "              \
+  ${sysconfdir}/crypttab     \
+  ${MENDER/LUKS_DATA_DIR}/   \
+  ${MENDER/LUKS_HEADER_DIR}/ \
 "
 
 DEPENDS += "       \
   coreutils-native \
 "
 
-do_install() {
-  install -d -m 0400                            ${D}$(dirname  ${MENDER/LUKS_LEGACY_KEY_FILE})
-  echo    -n "${MENDER/LUKS_PASSWORD}" > ${WORKDIR}/$(basename ${MENDER/LUKS_LEGACY_KEY_FILE})
-  install    -m 0400                     ${WORKDIR}/$(basename ${MENDER/LUKS_LEGACY_KEY_FILE}) ${D}${MENDER/LUKS_LEGACY_KEY_FILE}
+RDEPENDS:${PN} = " \
+  cryptsetup       \
+"
 
+do_install() {
+  install -d -m 0755                     ${D}${MENDER/LUKS_DATA_DIR}/
   install -d -m 0755                     ${D}${MENDER/LUKS_HEADER_DIR}/
   install -d                             ${D}${sysconfdir}
   install    -m 0644 ${WORKDIR}/crypttab ${D}${sysconfdir}
