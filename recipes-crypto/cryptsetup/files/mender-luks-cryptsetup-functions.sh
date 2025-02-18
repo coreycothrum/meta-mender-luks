@@ -152,14 +152,6 @@ luks_reencrypt() {
     local ENCRYPT_CMD=""
   fi
 
-  if do_sudo cryptsetup --header "${HEADER}" status "${NAME}"; then
-    echo "${NAME}:  online cryptsetup-reencrypt"
-    local OFFLINE_CMD=""
-  else
-    echo "${NAME}: offline cryptsetup-reencrypt"
-    local OFFLINE_CMD="--force-offline-reencrypt"
-  fi
-
   eval time do_sudo cryptsetup --batch-mode --type luks2 \
     --force-password                                     \
     --header   "${HEADER}"                               \
