@@ -28,9 +28,9 @@ cleanup() {
     for_each_in_crypttab "luks_close     \${NAME}"
     for_each_in_crypttab "dmsetup_remove \${NAME}"
 
+    do_sudo umount  "${BOOT_MNT}" > /dev/null 2>&1
     do_sudo losetup               > /dev/null 2>&1
     do_sudo losetup -D            > /dev/null 2>&1
-    do_sudo umount  "${BOOT_MNT}" > /dev/null 2>&1
     do_sudo sync
   set -eu
 }
@@ -77,7 +77,9 @@ _do_task() {
 }
 for_each_in_crypttab _do_task
 
-cleanup && echo "creating bmap" && bmaptool create -o "${IMAGE}.bmap" "${IMAGE}"
+cleanup
+echo "creating bmap: ${IMAGE}"
+bmaptool create -o "${IMAGE}.bmap" "${IMAGE}"
 echo "$(basename ${IMAGE}) can now provision new systems:"
 echo "    bmaptool copy ${IMAGE} <DEST>"
 
