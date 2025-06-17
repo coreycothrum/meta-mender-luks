@@ -3,7 +3,7 @@ After=data.mount
 Requires=data.mount
 
 [Path]
-PathChanged=@@MENDER/LUKS_KEY_FILE@@
+PathChanged=@@MENDER/LUKS_LEGACY_KEY_FILE@@
 MakeDirectory=True
 
 [Install]

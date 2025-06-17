@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!/bin/bash
 ################################################################################
 CONSOLE="/dev/console"
 PATH=$PATH:/sbin:/bin:/usr/sbin:/usr/bin
@@ -45,8 +45,6 @@ ROOT_HEADER=""
 
 DATA_DM_NAME=@@MENDER/LUKS__DATA__PART___DM_NAME@@
 DATA_HEADER=@@MENDER/LUKS__DATA__PART___HEADER@@
-
-LUKS_KEY="$MNT_DIR/@@MENDER/LUKS_KEY_FILE@@"
 
 ################################################################################
 read_args() {
@@ -95,12 +93,12 @@ unlock_luks_partitions() {
   install -m 600 -D /dev/null "${KEY_FILE}"
 
   if command -v "${TPM_UTIL}" 2>&1 >/dev/null; then
-      echo -n "$(${TPM_UTIL} --read)" > "${KEY_FILE}"
+    echo -n "$(${TPM_UTIL} --read)" > "${KEY_FILE}"
   fi
 
   for IDX in {1..3}; do
     eval cryptsetup --header "$MNT_DIR/$ROOT_HEADER"          \
-               --key-file=${KEY_FILE}                         \
+               --key-file="${KEY_FILE}"                       \
                luksOpen $ROOT_DEV $ROOT_DM_NAME               \
     && ROOT_DEV="@@MENDER/LUKS_DM_MAPPER_DIR@@/$ROOT_DM_NAME" \
     && return 0

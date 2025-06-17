@@ -10,9 +10,6 @@ Requires [meta-mender-kernel](https://github.com/coreycothrum/meta-mender-kernel
 * An ``ArtifactInstall`` state-script mounts the rootfs LUKS partition for ``mender-client`` access during an update.
 * Optional [TPM2 integration](#tpm2-integration) for unattended boot.
 
-### #FIXME - flesh this out more, bootflow, etc
-\#FIXME - coming soon
-
 ### TPM2 Integration
 Requires [meta-secure-core](https://github.com/jiazhang0/meta-secure-core). See [this kas file](kas/kas.tpm2.yml) for more setup details.
 
@@ -24,55 +21,7 @@ For unattended boot, the LUKS passphrase is loaded/sealed on the TPM2 device. Th
   * After a reboot, ``mender-luks-tpm-seal-on-boot.service`` reseals to ``MENDER/LUKS_TPM_PCR_SET_MAX`` if no systemd services have failed after ``MENDER/LUKS_SEAL_DELAY_SECS`` (i.e. a successful boot).
     Additional systemd dependencies can by added with ```MENDER/LUKS_SEAL_SYSTEMD_AFTER```.
 
-## Utilities and Services
-### luks-util
-\#FIXME - coming soon
-
-### tpm2-util
-\#FIXME - coming soon
-
-## Dependencies
-This layer depends on:
-
-    URI: git://git.openembedded.org/bitbake
-
-    URI: git://git.openembedded.org/openembedded-core
-    layers: meta
-    branch: master
-
-    URI: https://github.com/mendersoftware/meta-mender.git
-    layers: meta-mender-core
-    branch: master
-
-    URI: https://github.com/coreycothrum/meta-mender-kernel.git
-    layers: meta-mender-kernel
-    branch: master
-
-    URI: https://github.com/coreycothrum/meta-bitbake-variable-substitution.git
-    layers: meta-bitbake-variable-substitution
-    branch: master
-
-## Installation
-### Add Layer to Build
-In order to use this layer, the build system must be aware of it.
-
-Assuming this layer exists at the top-level of the yocto build tree; add the location of this layer to ``bblayers.conf``, along with any additional layers needed:
-
-    BBLAYERS ?= "                                       \
-      /path/to/yocto/meta                               \
-      /path/to/yocto/meta-poky                          \
-      /path/to/yocto/meta-yocto-bsp                     \
-      /path/to/yocto/meta-mender/meta-mender-core       \
-      /path/to/yocto/meta-bitbake-variable-substitution \
-      /path/to/yocto/meta-mender-kernel                 \
-      /path/to/yocto/meta-mender-luks                   \
-      "
-
-Alternatively, run bitbake-layers to add:
-
-    $ bitbake-layers add-layer /path/to/yocto/meta-mender-luks
-
-### Configure Layer
+## Configuration
 The following definitions should be added to ``local.conf`` or ``custom_machine.conf``
 
     require conf/include/mender-luks.inc
@@ -94,7 +43,7 @@ The following definitions should be added to ``local.conf`` or ``custom_machine.
     # MENDER/LUKS_TPM_PCR_SET_MAX       = "0,1,2,3,4,5"
     # MENDER/LUKS_TPM_PCR_UPDATE_UNLOCK = "min"
 
-#### kas
+### kas
 Alternatively, a [kas](https://github.com/siemens/kas) file has been provided to help with setup/config. [Include](https://kas.readthedocs.io/en/latest/userguide.html#including-configuration-files-from-other-repos) `kas/kas.yml` from this layer in the top level kas file. E.g.:
 
     header:
@@ -112,48 +61,31 @@ Alternatively, a [kas](https://github.com/siemens/kas) file has been provided to
 
 Additional files in [kas/](kas/) have been provided to selectively turn on some features, such as [TPM2 integration](#tpm2-integration).
 
-## Building
-A [standalone reference](kas/reference_builds/kas.min.x86-64.yml) build kas file has been provided.
+## Image Encryption
+Image encryption is not an automated part of the build process. It can be done with either a post-build script~~, or on system during 1st boot~~.
 
-### Docker
-All testing has been done with the `Dockerfile` located in [this repo](https://github.com/coreycothrum/yocto-builder-docker).
+The **mender artifact(s) work as-is** w/o this encryption step.
+If all you need is the mender artifact(s), then no further action is required.
+Image encryption is only significant when provisioning a new system.
 
-### Example/Reference Build
-Commands executed from [docker image](https://github.com/coreycothrum/meta-mender-luks#docker):
+### Post-Build Encryption Script
+The initial run of this script will luksFormat the partitions. Subsequent runs will reencrypt partitions in-place.
 
-    # clone repo
-    cd $YOCTO_WORKDIR && git clone https://github.com/coreycothrum/meta-mender-luks.git
+To execute:
 
-    # build TARGET image
-    cd $YOCTO_WORKDIR && kas build $YOCTO_WORKDIR/meta-mender-luks/kas/reference_builds/kas.min.x86-64.yml
+    bitbake mender-luks-cryptsetup-utils-native -caddto_recipe_sysroot \
+    && PASSWORD="p1" oe-run-native mender-luks-cryptsetup-utils-native \
+       mender-luks-cryptsetup-reencrypt-image-file.sh /path/to/IMAGE_FILE
 
-    # build QEMU image
-    cd $YOCTO_WORKDIR && kas build $YOCTO_WORKDIR/meta-mender-luks/kas/reference_builds/kas.min.x86-64.yml:$YOCTO_WORKDIR/meta-mender-luks/kas/reference_builds/kas.qemu.yml
+This will/may take awhile. On failure, it *may* not cleanup gracefully. Check `/dev/mapper` and `/dev/loop*` and cleanup as needed:
 
-### Encrypting
-Encryption is not an automated part of the build process. [This native script](recipes-core/mender-luks-encrypt-image/files/mender-luks-encrypt-image.sh) is provided as an optional post-build action.
-
-This is only needed when provisioning a new device from the full disk image. The **mender artifacts work as-is** w/o this encryption step.
-
-To execute the encryption script:
-
-    bitbake       mender-luks-encrypt-image-native -caddto_recipe_sysroot       && \
-    oe-run-native mender-luks-encrypt-image-native mender-luks-encrypt-image.sh <path_to_deploy_image>
-
-This will take awhile. If it fails, it *may* not cleanup gracefully. Check `/dev/mapper` and `/dev/loop*` and cleanup as needed
-(hint(s): `sudo dmsetup remove --force <NAME>` and `sudo losetup && sudo losetup -D`).
+    sudo dmsetup remove --force <NAME>
+    sudo losetup && sudo losetup -D
 
 ## Use Notes
-* The mender update artifact (\*.mender) is **UNENCRYPTED**.
+* The mender update artifact (\*.mender) remains **UNENCRYPTED**.
 * ``MENDER_BOOT_PART_SIZE_MB`` needs to have capacity for detached LUKS headers.
 * Enabling ``efi-secure-boot`` is recommended, especially when using unattended boot (requires [meta-secure-core](https://github.com/jiazhang0/meta-secure-core)).
 
-## Contributing
-Please submit any patches against this layer via pull request.
-
-Commits must be signed off.
-
-Use [conventional commits](https://www.conventionalcommits.org/).
-
 ## Release Schedule and Roadmap
-This layer will remain compatible with the latest [YOCTO LTS](https://wiki.yoctoproject.org/wiki/Releases). This mirrors what [meta-mender](https://github.com/mendersoftware/meta-mender) does.
+This layer will remain compatible with the latest [YOCTO LTS](https://wiki.yoctoproject.org/wiki/Releases). This mirrors [meta-mender](https://github.com/mendersoftware/meta-mender).
