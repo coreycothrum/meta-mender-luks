@@ -30,7 +30,7 @@ RDEPENDS:${PN} = "       \
 "
 
 RDEPENDS:${PN}:append:class-native = " \
-  bmap-tools                           \
+  bmaptool                             \
 "
 
 do_install() {
