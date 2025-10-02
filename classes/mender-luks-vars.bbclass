@@ -1,6 +1,7 @@
 ################################################################################
 # mender-luks variables
 ################################################################################
+MENDER/LUKS_PRINT_REENCRYPT_USAGE ??= "0"
 MENDER/LUKS_BYPASS_REENCRYPT      ??= "0"
 MENDER/LUKS_BYPASS_RANDOM_KEY     ??= "0"
 MENDER/LUKS_PASSWORD_AGENT_CMD    ??= "${@bb.utils.contains('DISTRO_FEATURES', 'tpm2', 'mender-luks-tpm2-util.sh --read', ':', d)}"
@@ -44,6 +45,7 @@ MENDER/LUKS_PRIMARY_KEY_SLOT      ??= "0"
 MENDER/LUKS_RECOVERY_KEY_SLOT     ??= "7"
 MENDER/LUKS_PASSWORD_DEFAULT        = "password"
 MENDER/LUKS_PASSWORD              ??= "${MENDER/LUKS_PASSWORD_DEFAULT}"
+MENDER/LUKS_PASSWORD_REENCRYPT    ??= "${MENDER/LUKS_PASSWORD}"
 MENDER/LUKS_CRYPTSETUP_KEY_SIZE   ??= "512"
 MENDER/LUKS_CRYPTSETUP_CIPHER     ??= "aes-xts-plain64"
 MENDER/LUKS_CRYPTSETUP_HASH       ??= "sha512"
