@@ -12,7 +12,6 @@ SRC_URI = "                             \
   file://abort-if-update-in-progress.sh \
   file://cleanup.sh                     \
   file://mount-rootfs-by-dm-mapper.sh   \
-  file://noop.sh                        \
 "
 
 inherit bitbake-variable-substitution-helpers
@@ -20,7 +19,6 @@ inherit mender-state-scripts
 
 do_compile() {
   cp ${WORKDIR}/abort-if-update-in-progress.sh ${MENDER_STATE_SCRIPTS_DIR}/Download_Enter_00_mender-luks-abort-if-update-in-progress.sh
-  cp ${WORKDIR}/noop.sh                        ${MENDER_STATE_SCRIPTS_DIR}/Download_Leave_00_mender-luks-noop.sh
   cp ${WORKDIR}/mount-rootfs-by-dm-mapper.sh   ${MENDER_STATE_SCRIPTS_DIR}/ArtifactInstall_Enter_00_mender-luks-mount-rootfs-by-dm-mapper.sh
   cp ${WORKDIR}/cleanup.sh                     ${MENDER_STATE_SCRIPTS_DIR}/ArtifactInstall_Leave_05_mender-luks-cleanup.sh
   cp ${WORKDIR}/cleanup.sh                     ${MENDER_STATE_SCRIPTS_DIR}/ArtifactInstall_Error_05_mender-luks-cleanup.sh
@@ -28,4 +26,4 @@ do_compile() {
   ${@bitbake_variables_search_and_sub(        "${MENDER_STATE_SCRIPTS_DIR}/", r"${BITBAKE_VAR_SUB_DELIM}", d)}
 }
 
-do_compile[nostamp] = "1"
+ALLOW_EMPTY:${PN} = "1"
