@@ -17,9 +17,9 @@ For unattended boot, the LUKS passphrase is loaded/sealed on the TPM2 device. Th
 * ``mender-luks-password-agent`` reads key and provides to cryptsetup at boot
 * ``mender-luks-tpm-key-watcher.service`` updates TPM2 when/if the LUKS key (file, on the filesystem) changes
 * mender updates:
-  * ``mender-luks-state-scripts-tpm`` unlocks/reseals to ``MENDER/LUKS_TPM_PCR_UPDATE_UNLOCK`` after a mender artifact is installed/written.
-  * After a reboot, ``mender-luks-tpm-seal-on-boot.service`` reseals to ``MENDER/LUKS_TPM_PCR_SET_MAX`` if no systemd services have failed after ``MENDER/LUKS_SEAL_DELAY_SECS`` (i.e. a successful boot).
-    Additional systemd dependencies can by added with ```MENDER/LUKS_SEAL_SYSTEMD_AFTER```.
+  * ``mender-luks-state-scripts-tpm``
+    * unlocks/unseals to ``MENDER/LUKS_TPM_PCR_UPDATE_UNLOCK`` after a mender artifact is installed/written.
+    * locks/seals to ``MENDER/LUKS_TPM_PCR_SET_MAX`` after a mender artifact is committed.
 
 ## Configuration
 The following definitions should be added to ``local.conf`` or ``custom_machine.conf``

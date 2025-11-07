@@ -7,7 +7,7 @@ function log {
 log "$(cat /etc/mender/artifact_info): $(basename "$0") was called!"
 
 function cleanup {
-  :
+  @@sbindir@@/mender-luks-tpm2-util.sh --write --pcrs max
 }
 trap cleanup EXIT
 
