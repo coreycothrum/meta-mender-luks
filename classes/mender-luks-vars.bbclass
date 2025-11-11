@@ -4,7 +4,7 @@
 MENDER/LUKS_PRINT_REENCRYPT_USAGE ??= "0"
 MENDER/LUKS_BYPASS_REENCRYPT      ??= "0"
 MENDER/LUKS_BYPASS_RANDOM_KEY     ??= "0"
-MENDER/LUKS_PASSWORD_AGENT_CMD    ??= "${@bb.utils.contains('DISTRO_FEATURES', 'tpm2', 'mender-luks-tpm2-util.sh --read', ':', d)}"
+MENDER/LUKS_TPM2_READ_CMD         ??= "${@bb.utils.contains('DISTRO_FEATURES', 'tpm2', 'mender-luks-tpm2-util.sh --read', ':', d)}"
 
 MENDER/LUKS_TMP_DIR                 = "/tmp/mender-luks"
 MENDER/LUKS_DATA_DIR                = "${MENDER_DATA_PART_MOUNT_LOCATION}/luks"
@@ -38,6 +38,7 @@ MENDER/LUKS_DENY_IMAGE_TYPES        = "             \
                                       "
 
 MENDER/LUKS_SYSTEMD_INITRD_CREDENTIALS_DIR = "/run/credentials/@initrd"
+MENDER/LUKS_SYSTEMD_INITRD_CREDENTIALS_VAR = "cryptsetup.passphrase"
 MENDER/LUKS_LEGACY_KEY_FILE         = "${MENDER/LUKS_DATA_DIR}/.key.luks"
 MENDER/LUKS_PRIMARY_KEY_SLOT      ??= "0"
 MENDER/LUKS_RECOVERY_KEY_SLOT     ??= "7"

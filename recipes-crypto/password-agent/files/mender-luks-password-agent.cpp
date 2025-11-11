@@ -1,37 +1,36 @@
 #include <dirent.h>
 #include <errno.h>
+#include <fstream>
 #include <iostream>
-#include <limits.h>
-#include <stddef.h>
 #include <stdio.h>
-#include <stdlib.h>
+#include <signal.h>
 #include <string.h>
 #include <sys/types.h>
 #include <unistd.h>
-
-#include <signal.h>
-#include <sys/socket.h>
-#include <sys/un.h>
 
 #include <INIReader.h>
 
 #define ASK_PASSWD_DIR "/run/systemd/ask-password/"
 
 int get_passwd(std::string &passwd) {
-  const std::string cmd_str = "@@MENDER/LUKS_PASSWORD_AGENT_CMD@@";
-  FILE *cmd = popen(cmd_str.c_str(), "r");
-  if (cmd) {
-    char key_str[2048];
-    const auto fgets_rtn = fgets(key_str, sizeof(key_str), cmd);
-
-    if ((pclose(cmd) == 0) && (fgets_rtn != NULL)) {
-      passwd = std::string(key_str);
+  const char* cred_dir = std::getenv("CREDENTIALS_DIRECTORY");
+  if(cred_dir) {
+    const std::string fname = std::string(cred_dir) + "/" + "@@MENDER/LUKS_SYSTEMD_INITRD_CREDENTIALS_VAR@@";
+    std::ifstream fs(fname);
+    if(fs.is_open()) {
+      passwd = std::string(std::istreambuf_iterator<char>(fs), std::istreambuf_iterator<char>());
       while (!passwd.empty() && passwd.back() == '\n') {
         passwd.pop_back();
       }
+      fs.close();
       return 0;
+    } else {
+      fprintf(stderr, "failed to open %s: %s\n", fname.c_str(), strerror(errno));
     }
+  } else {
+    fprintf(stderr, "missing CREDENTIALS_DIRECTORY: %s\n", strerror(errno));
   }
+  passwd.clear();
   return -1;
 }
 

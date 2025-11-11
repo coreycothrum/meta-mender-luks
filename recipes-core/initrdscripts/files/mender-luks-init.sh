@@ -87,14 +87,9 @@ map_root_dev() {
 }
 
 unlock_luks_partitions() {
-  local KEY_FILE="@@MENDER/LUKS_SYSTEMD_INITRD_CREDENTIALS_DIR@@/legacy"
-  local TPM_UTIL="mender-luks-tpm2-util.sh"
+  local KEY_FILE="@@MENDER/LUKS_SYSTEMD_INITRD_CREDENTIALS_DIR@@/@@MENDER/LUKS_SYSTEMD_INITRD_CREDENTIALS_VAR@@"
 
-  install -m 600 -D /dev/null "${KEY_FILE}"
-
-  if command -v "${TPM_UTIL}" 2>&1 >/dev/null; then
-    echo -n "$(${TPM_UTIL} --read)" > "${KEY_FILE}"
-  fi
+  install -m 600 -D <(@@MENDER/LUKS_TPM2_READ_CMD@@) "${KEY_FILE}"
 
   for IDX in {1..3}; do
     eval cryptsetup --header "$MNT_DIR/$ROOT_HEADER"          \
