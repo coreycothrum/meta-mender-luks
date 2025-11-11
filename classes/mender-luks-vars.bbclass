@@ -38,6 +38,7 @@ MENDER/LUKS_DENY_IMAGE_TYPES        = "             \
                                       "
 
 MENDER/LUKS_SYSTEMD_INITRD_CREDENTIALS_DIR = "/run/credentials/@initrd"
+MENDER/LUKS_SYSTEMD_INITRD_CREDENTIALS_VAR = "key.luks"
 MENDER/LUKS_LEGACY_KEY_FILE         = "${MENDER/LUKS_DATA_DIR}/.key.luks"
 MENDER/LUKS_PRIMARY_KEY_SLOT      ??= "0"
 MENDER/LUKS_RECOVERY_KEY_SLOT     ??= "7"

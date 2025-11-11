@@ -87,7 +87,7 @@ map_root_dev() {
 }
 
 unlock_luks_partitions() {
-  local KEY_FILE="@@MENDER/LUKS_SYSTEMD_INITRD_CREDENTIALS_DIR@@/legacy"
+  local KEY_FILE="@@MENDER/LUKS_SYSTEMD_INITRD_CREDENTIALS_DIR@@/@@MENDER/LUKS_SYSTEMD_INITRD_CREDENTIALS_VAR@@"
   local TPM_UTIL="mender-luks-tpm2-util.sh"
 
   install -m 600 -D /dev/null "${KEY_FILE}"
