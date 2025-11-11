@@ -13,13 +13,14 @@ Requires [meta-mender-kernel](https://github.com/coreycothrum/meta-mender-kernel
 ### TPM2 Integration
 Requires [meta-secure-core](https://github.com/jiazhang0/meta-secure-core). See [this kas file](kas/kas.tpm2.yml) for more setup details.
 
-For unattended boot, the LUKS passphrase is loaded/sealed on the TPM2 device. This should be transparent to the user.
-* ``mender-luks-password-agent`` reads key and provides to cryptsetup at boot
-* ``mender-luks-tpm-key-watcher.service`` updates TPM2 when/if the LUKS key (file, on the filesystem) changes
-* mender updates:
-  * ``mender-luks-state-scripts-tpm``
-    * unlocks/unseals to ``MENDER/LUKS_TPM_PCR_UPDATE_UNLOCK`` after a mender artifact is installed/written.
-    * locks/seals to ``MENDER/LUKS_TPM_PCR_SET_MAX`` after a mender artifact is committed.
+For unattended boot, the LUKS passphrase is sealed/stored on the TPM2 device.
+This key is read from the TPM2, and then written into the systemd credential framework, during the initramfs stage.
+The key can then be accessed by cryptsetup to unlock the encrypted partitions.
+All this should be transparent to the user.
+
+Custom mender state scripts (``mender-luks-state-scripts-tpm``) will:
+  * unlock/unseal to ``MENDER/LUKS_TPM_PCR_UPDATE_UNLOCK`` after a mender artifact is installed/written.
+  * lock/seal to ``MENDER/LUKS_TPM_PCR_SET_MAX`` after a mender artifact is committed.
 
 ## Configuration
 The following definitions should be added to ``local.conf`` or ``custom_machine.conf``
