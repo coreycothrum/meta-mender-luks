@@ -28,9 +28,14 @@ do_install() {
   install -d                             ${D}${sysconfdir}
   install    -m 0644 ${WORKDIR}/crypttab ${D}${sysconfdir}
 
-  echo "${MENDER/LUKS__DATA__PART___DM_NAME} ${MENDER_DATA_PART}     none ${MENDER/LUKS_CRYPTTAB_OPTS},header=${MENDER/LUKS__DATA__PART___HEADER}"  > ${D}${sysconfdir}/crypttab
-  echo "${MENDER/LUKS_ROOTFS_PART_A_DM_NAME} ${MENDER_ROOTFS_PART_A} none ${MENDER/LUKS_CRYPTTAB_OPTS},header=${MENDER/LUKS_ROOTFS_PART_A_HEADER}" >> ${D}${sysconfdir}/crypttab
-  echo "${MENDER/LUKS_ROOTFS_PART_B_DM_NAME} ${MENDER_ROOTFS_PART_B} none ${MENDER/LUKS_CRYPTTAB_OPTS},header=${MENDER/LUKS_ROOTFS_PART_B_HEADER}" >> ${D}${sysconfdir}/crypttab
+  local KEY_FILE="none"
+  # FIXME - next sytemd update (256+), try using "cryptsetup.passphrase" credential instead of this KEY_FILE
+  # reference: https://man.archlinux.org/man/systemd-cryptsetup.8#CREDENTIALS
+  local KEY_FILE="/run/credentials/@system/${MENDER/LUKS_SYSTEMD_INITRD_CREDENTIALS_VAR}"
+
+  echo "${MENDER/LUKS__DATA__PART___DM_NAME} ${MENDER_DATA_PART}     ${KEY_FILE} ${MENDER/LUKS_CRYPTTAB_OPTS},header=${MENDER/LUKS__DATA__PART___HEADER}"  > ${D}${sysconfdir}/crypttab
+  echo "${MENDER/LUKS_ROOTFS_PART_A_DM_NAME} ${MENDER_ROOTFS_PART_A} ${KEY_FILE} ${MENDER/LUKS_CRYPTTAB_OPTS},header=${MENDER/LUKS_ROOTFS_PART_A_HEADER}" >> ${D}${sysconfdir}/crypttab
+  echo "${MENDER/LUKS_ROOTFS_PART_B_DM_NAME} ${MENDER_ROOTFS_PART_B} ${KEY_FILE} ${MENDER/LUKS_CRYPTTAB_OPTS},header=${MENDER/LUKS_ROOTFS_PART_B_HEADER}" >> ${D}${sysconfdir}/crypttab
 
   # #FIXME - MENDER_EXTRA_PARTS
 
