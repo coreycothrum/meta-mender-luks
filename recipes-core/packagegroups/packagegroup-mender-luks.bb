@@ -2,11 +2,10 @@ DESCRIPTION = "meta-mender-luks system packages"
 
 require packagegroup-mender-luks-common.inc
 
-RDEPENDS:${PN} += "                     \
-  ${MLPREFIX}mender-luks-cryptsetup     \
-  ${MLPREFIX}mender-luks-luks-util      \
-  ${MLPREFIX}mender-luks-password-agent \
-  ${MLPREFIX}mender-luks-state-scripts  \
+RDEPENDS:${PN} += "                    \
+  ${MLPREFIX}mender-luks-cryptsetup    \
+  ${MLPREFIX}mender-luks-luks-util     \
+  ${MLPREFIX}mender-luks-state-scripts \
 "
 
 RDEPENDS:${PN} += "${@bb.utils.contains("MENDER/LUKS_BYPASS_REENCRYPT" , "1", "", "${MLPREFIX}mender-luks-reencrypt-on-default-password", d)}"
