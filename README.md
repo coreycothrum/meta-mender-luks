@@ -22,6 +22,12 @@ Custom mender state scripts (``mender-luks-state-scripts-tpm``) will:
   * unlock/unseal to ``MENDER/LUKS_TPM_PCR_UPDATE_UNLOCK`` after a mender artifact is installed/written.
   * lock/seal to ``MENDER/LUKS_TPM_PCR_SET_MAX`` after a mender artifact is committed.
 
+## Installation
+* Add this layer to ``bblayers.conf``. Note this layer has dependencies:
+   * ``meta-bitbake-variable-substitution``
+   * ``meta-mender-kernel``
+* ``local.conf`` should include: ``require conf/include/mender-luks.inc``, along with any [configuration variables](#configuration)
+
 ## Configuration
 The following definitions should be added to ``local.conf`` or ``custom_machine.conf``
 
@@ -63,7 +69,7 @@ Alternatively, a [kas](https://github.com/siemens/kas) file has been provided to
 Additional files in [kas/](kas/) have been provided to selectively turn on some features, such as [TPM2 integration](#tpm2-integration).
 
 ## Image Encryption
-Image encryption is not an automated part of the build process. It can be done with either a post-build script~~, or on system during 1st boot~~.
+Image encryption is not an automated part of the build process. It can be done with either a post-build script ~~, or on system during 1st boot~~.
 
 The **mender artifact(s) work as-is** w/o this encryption step.
 If all you need is the mender artifact(s), then no further action is required.
@@ -78,7 +84,7 @@ To execute:
     && PASSWORD="p1" oe-run-native mender-luks-cryptsetup-utils-native \
        mender-luks-cryptsetup-reencrypt-image-file.sh /path/to/IMAGE_FILE
 
-This will/may take awhile. On failure, it *may* not cleanup gracefully. Check `/dev/mapper` and `/dev/loop*` and cleanup as needed:
+This will/may take awhile. On failure, it *may* not cleanup gracefully. Check ``/dev/mapper`` and ``/dev/loop*`` and cleanup as needed:
 
     sudo dmsetup remove --force <NAME>
     sudo losetup && sudo losetup -D
