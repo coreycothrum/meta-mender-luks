@@ -4,7 +4,7 @@ set -e
 function log {
   echo "$@" >&2
 }
-log "$(cat /etc/mender/artifact_info): $(basename "$0") was called!"
+log "$(mender show-artifact): $(basename "$0") was called!"
 
 function fatal {
   log $@

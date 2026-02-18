@@ -12,7 +12,7 @@ repos:
   meta-mender-kernel:
     url   : "https://github.com/coreycothrum/meta-mender-kernel.git"
     branch: master
-    commit: 3bfe31ba63100dfb8bcbaf603a55160500c8d0cd
+    commit: 54df685c903508d883977cc2fb349d92ddd68799
 
   meta-secure-core:
     layers :
