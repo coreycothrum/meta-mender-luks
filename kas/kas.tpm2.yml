@@ -6,6 +6,9 @@ local_conf_header:
     DISTRO_FEATURES:append = " tpm2"
 
 repos:
+  meta-openembedded:
+    layers:
+      meta-python:
   meta-secure-core:
     layers :
       meta-tpm2:
