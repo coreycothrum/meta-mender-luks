@@ -33,14 +33,20 @@ The following definitions should be added to ``local.conf`` or ``custom_machine.
 
     require conf/include/mender-luks.inc
 
-    MENDER/LUKS_PASSWORD                = "n3w_p@ssw0rd"
+    # NOTE: this password doesn't do anything with the build or initial encryption
+    # ... it is used to "blacklist" a default password
+    # ... it should match the PASSWORD you post script encrypted with (if you want to use these features)
+    # ... there are plans to deprecate this functionality
+    # MENDER/LUKS_PASSWORD              = "n3w_p@ssw0rd"
 
-    # 0 = @ system boot: randomize LUKS password if weak or still set to default value
+    # 0 = @ system boot: randomize LUKS password if weak or still set to MENDER/LUKS_PASSWORD
     # 1 = @ system boot: do not check LUKS password
+    # NOTE: there are plans to deprecate this functionality
     # MENDER/LUKS_BYPASS_RANDOM_KEY     = "1"
 
-    # 0 = @ system boot: reencrypt LUKS master key(s) if password is still set to default value
-    # 1 = @ system boot: do no reencrypt LUKS partitions
+    # 0 = @ system boot: reencrypt LUKS master key(s) if password is still set to MENDER/LUKS_PASSWORD
+    # 1 = @ system boot: do not reencrypt LUKS partitions
+    # NOTE: there are plans to deprecate this functionality
     # MENDER/LUKS_BYPASS_REENCRYPT      = "1"
 
     # PCRs levels to seal TPM2
@@ -62,9 +68,10 @@ Alternatively, a [kas](https://github.com/siemens/kas) file has been provided to
     local_conf_header:
       01_meta-mender-luks: |
         # define here, or in a custom layer
-        MENDER/LUKS_PASSWORD          = "n3w_p@ssw0rd"
-        MENDER/LUKS_BYPASS_RANDOM_KEY = "1"
-        MENDER/LUKS_BYPASS_REENCRYPT  = "1"
+        # ... these variables are not required and marked for deprecation
+        # MENDER/LUKS_PASSWORD          = "n3w_p@ssw0rd"
+        # MENDER/LUKS_BYPASS_RANDOM_KEY = "1"
+        # MENDER/LUKS_BYPASS_REENCRYPT  = "1"
 
 Additional files in [kas/](kas/) have been provided to selectively turn on some features, such as [TPM2 integration](#tpm2-integration).
 
@@ -81,8 +88,10 @@ The initial run of this script will luksFormat the partitions. Subsequent runs w
 To execute:
 
     bitbake mender-luks-cryptsetup-utils-native -caddto_recipe_sysroot \
-    && PASSWORD="p1" oe-run-native mender-luks-cryptsetup-utils-native \
+    && PASSWORD="n3w_p@ssw0rd" oe-run-native mender-luks-cryptsetup-utils-native \
        mender-luks-cryptsetup-reencrypt-image-file.sh /path/to/IMAGE_FILE
+
+**Note:** The `PASSWORD` used here is what the partitions are initially encrypted with. You'll need to **enter this on first boot**.
 
 This will/may take awhile. On failure, it *may* not cleanup gracefully. Check ``/dev/mapper`` and ``/dev/loop*`` and cleanup as needed:
 
