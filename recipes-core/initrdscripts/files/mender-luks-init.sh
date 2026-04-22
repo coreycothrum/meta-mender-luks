@@ -23,6 +23,19 @@ fatal() {
 }
 
 ################################################################################
+wait_for_block_device() {
+  local DEVICE="${1}"
+  local TIMEOUT="${2:-60}" # default 60 seconds if not specified
+
+  while [ "${TIMEOUT}" -gt 0 ]; do
+    [ -b "${DEVICE}" ] && return 0
+    sleep 1
+    TIMEOUT=$((TIMEOUT - 1))
+  done
+  fatal "${DEVICE}: No such file or directory"
+}
+
+################################################################################
 MNT_DIR="/tmp"
 
 ROOT_MNT="$MNT_DIR/root"
@@ -106,13 +119,14 @@ unlock_luks_partitions() {
 }
 
 ################################################################################
-mkdir -p           $BOOT_MNT
-mount    $BOOT_DEV $BOOT_MNT
+mkdir -p                          "$BOOT_MNT"
+wait_for_block_device "$BOOT_DEV"
+mount                 "$BOOT_DEV" "$BOOT_MNT"
 
 read_args && map_root_dev && unlock_luks_partitions
 
-mkdir -p           $ROOT_MNT
-mount    $ROOT_DEV $ROOT_MNT
-
-cd                 $ROOT_MNT
-exec switch_root   $ROOT_MNT /sbin/init
+mkdir -p                          "$ROOT_MNT"
+wait_for_block_device "$ROOT_DEV"
+mount                 "$ROOT_DEV" "$ROOT_MNT"
+cd                                "$ROOT_MNT"
+exec switch_root                  "$ROOT_MNT" /sbin/init
