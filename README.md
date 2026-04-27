@@ -7,7 +7,7 @@ Requires [meta-mender-kernel](https://github.com/coreycothrum/meta-mender-kernel
 * The ``/boot`` and [A/B kernel partitions](https://github.com/coreycothrum/meta-mender-kernel) are left unencrypted.
 * The rootfs and ``/data`` partitions are encrypted with detached LUKS headers. The detached headers are stored on the ``/boot`` partition.
 * The LUKS passphrase is stored in plain text on the (encrypted) ``/data`` partition.
-* An ``ArtifactInstall`` state-script mounts the rootfs LUKS partition for ``mender-client`` access during an update.
+* An ``ArtifactInstall`` state-script mounts the rootfs LUKS partition for ``mender-update`` access during an update.
 * Optional [TPM2 integration](#tpm2-integration) for unattended boot.
 
 ### TPM2 Integration
