@@ -13,8 +13,4 @@ IMAGE_FSTYPES:remove                     = " ${MENDER/LUKS_DENY_IMAGE_TYPES}"
 
 ################################################################################
 DISTRO_FEATURES:append                   = " luks systemd pam"
-DISTRO_FEATURES_BACKFILL_CONSIDERED     += "sysvinit"
-INIT_MANAGER                             = "systemd"
-VIRTUAL-RUNTIME_init_manager             = "systemd"
-VIRTUAL-RUNTIME_initscripts              = "systemd-compat-units"
-VIRTUAL-RUNTIME_login_manager            = "shadow-base"
+DISTRO_FEATURES_OPTED_OUT               += "sysvinit"
