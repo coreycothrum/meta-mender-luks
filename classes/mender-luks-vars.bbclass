@@ -28,14 +28,6 @@ MENDER/LUKS_ROOTFS_PART_B_DM_NAME   = "RootfsPart${MENDER_ROOTFS_PART_B_NUMBER}"
 
 MENDER/LUKS_SUDO_ENV                = "PATH=$PATH LD_LIBRARY_PATH=$LD_LIBRARY_PATH PSEUDO_UNLOAD=1"
 MENDER/LUKS_SUDO_CMD                = "env "PSEUDO_UNLOAD=1" /usr/bin/sudo env "${MENDER/LUKS_SUDO_ENV}""
-MENDER/LUKS_DENY_IMAGE_TYPES        = "             \
-                                        biosimg.bz2 \
-                                        gptimg.bz2  \
-                                        sdimg.bz2   \
-                                        uefiimg.bz2 \
-                                        hddimg      \
-                                        wic         \
-                                      "
 
 MENDER/LUKS_SYSTEMD_INITRD_CREDENTIALS_DIR = "/run/credentials/@initrd"
 MENDER/LUKS_SYSTEMD_INITRD_CREDENTIALS_VAR = "cryptsetup.passphrase"
