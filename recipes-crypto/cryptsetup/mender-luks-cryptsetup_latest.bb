@@ -7,6 +7,7 @@ BBCLASSEXTEND    = "native nativesdk"
 SRC_URI += "      \
   file://crypttab \
 "
+S = "${UNPACKDIR}"
 
 FILES:${PN} = "              \
   ${sysconfdir}/crypttab     \
@@ -23,10 +24,12 @@ RDEPENDS:${PN} = " \
 "
 
 do_install() {
-  install -d -m 0755                     ${D}${MENDER/LUKS_DATA_DIR}/
-  install -d -m 0755                     ${D}${MENDER/LUKS_HEADER_DIR}/
-  install -d                             ${D}${sysconfdir}
-  install    -m 0644 ${WORKDIR}/crypttab ${D}${sysconfdir}
+  install -d -m 0755               ${D}${MENDER/LUKS_DATA_DIR}/
+  install -d -m 0755               ${D}${MENDER/LUKS_HEADER_DIR}/
+  install -d                       ${D}${sysconfdir}
+  install    -m 0644 ${S}/crypttab ${D}${sysconfdir}
+
+
 
   local KEY_FILE="none"
   # FIXME - next sytemd update (256+), try using "cryptsetup.passphrase" credential instead of this KEY_FILE

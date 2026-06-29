@@ -4,6 +4,7 @@ LICENSE          = "MIT"
 LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/MIT;md5=0835ade698e0bcf8506ecda2f7b4f302"
 
 ################################################################################
+S                = "${UNPACKDIR}"
 SRC_URI          = "                                \
                      file://mender-luks-util.sh     \
                    "
@@ -21,6 +22,6 @@ RDEPENDS:${PN}   = "            \
 inherit bitbake-variable-substitution
 
 do_install () {
-    install -d -m 755                                ${D}${sbindir}
-    install    -m 755 ${WORKDIR}/mender-luks-util.sh ${D}${sbindir}/
+    install -d -m 755                          ${D}${sbindir}
+    install    -m 755 ${S}/mender-luks-util.sh ${D}${sbindir}/
 }

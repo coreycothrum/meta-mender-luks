@@ -6,6 +6,7 @@ LIC_FILES_CHKSUM       = "file://${COMMON_LICENSE_DIR}/MIT;md5=0835ade698e0bcf85
 SYSTEMD_AUTO_ENABLE    = "enable"
 SYSTEMD_SERVICE:${PN} += "mender-luks-deny-default-password.service"
 
+S                      = "${UNPACKDIR}"
 SRC_URI                = "                                                                     \
                            file://mender-luks-deny-default-password.service                    \
                          "
@@ -18,6 +19,6 @@ inherit systemd
 inherit bitbake-variable-substitution
 
 do_install () {
-    install -d                                                           ${D}${systemd_unitdir}/system
-    install -m 0644 ${WORKDIR}/mender-luks-deny-default-password.service ${D}${systemd_unitdir}/system
+    install -d                                                     ${D}${systemd_unitdir}/system
+    install -m 0644 ${S}/mender-luks-deny-default-password.service ${D}${systemd_unitdir}/system
 }

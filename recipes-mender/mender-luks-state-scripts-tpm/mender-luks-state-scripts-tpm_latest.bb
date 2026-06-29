@@ -13,17 +13,18 @@ SRC_URI = "            \
   file://tpm-seal.sh   \
   file://tpm-unseal.sh \
 "
+S = "${UNPACKDIR}"
 
 inherit bitbake-variable-substitution-helpers
 inherit mender-state-scripts
 
 do_compile() {
-  cp ${WORKDIR}/tpm-seal.sh   ${MENDER_STATE_SCRIPTS_DIR}/ArtifactCommit_Leave_90_mender-luks-tpm-seal.sh
-  cp ${WORKDIR}/tpm-seal.sh   ${MENDER_STATE_SCRIPTS_DIR}/ArtifactRollbackReboot_Leave_90_mender-luks-tpm-seal.sh
+  cp ${S}/tpm-seal.sh   ${MENDER_STATE_SCRIPTS_DIR}/ArtifactCommit_Leave_90_mender-luks-tpm-seal.sh
+  cp ${S}/tpm-seal.sh   ${MENDER_STATE_SCRIPTS_DIR}/ArtifactRollbackReboot_Leave_90_mender-luks-tpm-seal.sh
 
-  cp ${WORKDIR}/tpm-unseal.sh ${MENDER_STATE_SCRIPTS_DIR}/ArtifactInstall_Error_20_mender-luks-tpm-unseal.sh
-  cp ${WORKDIR}/tpm-unseal.sh ${MENDER_STATE_SCRIPTS_DIR}/ArtifactInstall_Leave_20_mender-luks-tpm-unseal.sh
-  cp ${WORKDIR}/tpm-unseal.sh ${MENDER_STATE_SCRIPTS_DIR}/ArtifactRollback_Leave_20_mender-luks-tpm-unseal.sh
+  cp ${S}/tpm-unseal.sh ${MENDER_STATE_SCRIPTS_DIR}/ArtifactInstall_Error_20_mender-luks-tpm-unseal.sh
+  cp ${S}/tpm-unseal.sh ${MENDER_STATE_SCRIPTS_DIR}/ArtifactInstall_Leave_20_mender-luks-tpm-unseal.sh
+  cp ${S}/tpm-unseal.sh ${MENDER_STATE_SCRIPTS_DIR}/ArtifactRollback_Leave_20_mender-luks-tpm-unseal.sh
 
   ${@bitbake_variables_search_and_sub("${MENDER_STATE_SCRIPTS_DIR}/", r"${BITBAKE_VAR_SUB_DELIM}", d)}
 }

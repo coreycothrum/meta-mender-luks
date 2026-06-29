@@ -11,6 +11,7 @@ inherit bitbake-variable-substitution
 SYSTEMD_AUTO_ENABLE    = "enable"
 SYSTEMD_SERVICE:${PN} += "mender-luks-tpm-key-watcher.path"
 
+S = "${UNPACKDIR}"
 SRC_URI = "                                  \
   file://mender-luks-tpm2-util.sh            \
   file://mender-luks-tpm-key-watcher.path    \
@@ -27,10 +28,10 @@ RDEPENDS:${PN} = " \
 "
 
 do_install () {
-  install -d -m 755                                                 ${D}${sbindir}
-  install    -m 755  ${WORKDIR}/mender-luks-tpm2-util.sh            ${D}${sbindir}
+  install -d -m 755                                           ${D}${sbindir}
+  install    -m 755  ${S}/mender-luks-tpm2-util.sh            ${D}${sbindir}
 
-  install -d                                                        ${D}${systemd_unitdir}/system
-  install    -m 0644 ${WORKDIR}/mender-luks-tpm-key-watcher.path    ${D}${systemd_unitdir}/system
-  install    -m 0644 ${WORKDIR}/mender-luks-tpm-key-watcher.service ${D}${systemd_unitdir}/system
+  install -d                                                  ${D}${systemd_unitdir}/system
+  install    -m 0644 ${S}/mender-luks-tpm-key-watcher.path    ${D}${systemd_unitdir}/system
+  install    -m 0644 ${S}/mender-luks-tpm-key-watcher.service ${D}${systemd_unitdir}/system
 }

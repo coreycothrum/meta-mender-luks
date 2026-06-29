@@ -11,6 +11,7 @@ SRC_URI = "                                             \
   file://mender-luks-cryptsetup-functions.sh            \
   file://mender-luks-cryptsetup-reencrypt-image-file.sh \
 "
+S = "${UNPACKDIR}"
 
 FILES:${PN} = "                                  \
   ${sbindir}/mender-luks-cryptsetup-functions.sh \
@@ -34,11 +35,11 @@ RDEPENDS:${PN}:append:class-native = " \
 "
 
 do_install() {
-  install -d -m 755                                                ${D}${sbindir}
-  install    -m 755 ${WORKDIR}/mender-luks-cryptsetup-functions.sh ${D}${sbindir}/
+  install -d -m 755                                          ${D}${sbindir}
+  install    -m 755 ${S}/mender-luks-cryptsetup-functions.sh ${D}${sbindir}/
 }
 
 do_install:append:class-native() {
-  install -d -m 755                                                           ${D}${sbindir}
-  install    -m 755 ${WORKDIR}/mender-luks-cryptsetup-reencrypt-image-file.sh ${D}${sbindir}/
+  install -d -m 755                                                     ${D}${sbindir}
+  install    -m 755 ${S}/mender-luks-cryptsetup-reencrypt-image-file.sh ${D}${sbindir}/
 }
