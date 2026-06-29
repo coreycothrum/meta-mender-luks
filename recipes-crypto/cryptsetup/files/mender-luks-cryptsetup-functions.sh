@@ -153,6 +153,7 @@ luks_reencrypt() {
   fi
 
   eval time do_sudo cryptsetup --batch-mode --type luks2 \
+    @@MENDER/LUKS_CRYPTSETUP_REENCRYPT_OPTIONS@@         \
     --force-password                                     \
     --header   "${HEADER}"                               \
     --key-file "${KEY_FILE}"                             \

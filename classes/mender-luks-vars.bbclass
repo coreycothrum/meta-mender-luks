@@ -44,20 +44,13 @@ MENDER/LUKS_PASSWORD              ??= "${MENDER/LUKS_PASSWORD_DEFAULT}"
 # not functional; convenience variable to customize post build encrypt script usage print
 MENDER/LUKS_PASSWORD_REENCRYPT    ??= "${MENDER/LUKS_PASSWORD}"
 
-MENDER/LUKS_CRYPTSETUP_KEY_SIZE   ??= "512"
-MENDER/LUKS_CRYPTSETUP_CIPHER     ??= "aes-xts-plain64"
-MENDER/LUKS_CRYPTSETUP_HASH       ??= "sha512"
-MENDER/LUKS_CRYPTSETUP_PBKDF      ??= "argon2i"
-MENDER/LUKS_CRYPTSETUP_OPTS_BASE    = "--type luks2 --batch-mode"
-MENDER/LUKS_CRYPTSETUP_OPTS_SPECS   = "                                                \
-                                                   ${MENDER/LUKS_CRYPTSETUP_OPTS_BASE} \
-                                        --key-size ${MENDER/LUKS_CRYPTSETUP_KEY_SIZE}  \
-                                        --cipher   ${MENDER/LUKS_CRYPTSETUP_CIPHER}    \
-                                        --hash     ${MENDER/LUKS_CRYPTSETUP_HASH}      \
-                                        --pbkdf    ${MENDER/LUKS_CRYPTSETUP_PBKDF}     \
-                                      "
-MENDER/LUKS_CRYPTTAB_OPTS         ??= "luks,nofail"
+MENDER/LUKS_TPM2_DEVICE                  ??= "auto"
+MENDER/LUKS_CRYPTSETUP_REENCRYPT_OPTIONS ??= ""
+MENDER/LUKS_CRYPTTAB_OPTIONS             ??= "luks,nofail,try-empty-password=1,${@bb.utils.contains("DISTRO_FEATURES", 'tpm2', 'tpm2-device=${MENDER/LUKS_TPM2_DEVICE}', '', d)}"
 
+################################################################################
+################################################################################
+################################################################################
 MENDER/LUKS_TPM2TOOLS_TCTI_NAME   ??= "device"
 MENDER/LUKS_TPM2TOOLS_DEVICE_FILE ??= "/dev/tpmrm0"
 

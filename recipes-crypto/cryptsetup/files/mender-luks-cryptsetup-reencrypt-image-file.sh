@@ -71,7 +71,7 @@ _do_task() {
       do_sudo umount                          "${DATA_MNT}"
     fi
   fi
-  luks_close      "${NAME}"
+  luks_close "${NAME}"
 
   return 0
 }
