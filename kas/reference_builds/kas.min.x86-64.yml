@@ -32,10 +32,7 @@ local_conf_header:
 
   05_image_features: |
     IMAGE_FEATURES:remove                 = " splash"
-    EXTRA_IMAGE_FEATURES                 ?= "allow-empty-password debug-tweaks"
-
-  05_user_classes: |
-    USER_CLASSES                         ?= "buildstats"
+    EXTRA_IMAGE_FEATURES                 ?= "allow-empty-password"
 
   05_shell_config: |
     PATCHRESOLVE                          = "noop"
