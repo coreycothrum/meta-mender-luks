@@ -25,6 +25,7 @@ FILES:${PN} = "                                                 \
 RDEPENDS:${PN} = " \
   coreutils  \
   tpm2-tools \
+  util-linux \
 "
 
 do_install () {
