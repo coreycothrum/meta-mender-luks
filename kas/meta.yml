@@ -12,7 +12,7 @@ repos:
   meta-mender-kernel:
     url   : "https://github.com/coreycothrum/meta-mender-kernel.git"
     branch: wrynose
-    commit: 6a79d5869cbc2b61a077f0a34b258556c4add218
+    commit: 381055a1235413c9bbdc097135563c9f1496d8d0
 
   meta-secure-core:
     layers :
