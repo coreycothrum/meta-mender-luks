@@ -42,15 +42,23 @@ ROOT_MNT="$MNT_DIR/root"
 ROOT_DEV=""
 
 BOOT_MNT="$MNT_DIR@@MENDER_BOOT_PART_MOUNT_LOCATION@@"
-BOOT_DEV=@@MENDER_BOOT_PART@@
 
 DATA_MNT="$MNT_DIR@@MENDER_DATA_PART_MOUNT_LOCATION@@"
-DATA_DEV=@@MENDER_DATA_PART@@
 
 if [[ "@@MENDER/LUKS_PARTUUID_IS_USED@@" == "1" ]]; then
-  BOOT_DEV=$(findfs PARTUUID="$(basename @@MENDER_BOOT_PART@@)")
-  # This is currently ununsed
-  DATA_DEV=$(findfs PARTUUID="$(basename @@MENDER_DATA_PART@@)")
+  BOOT_DEV=$(blkid -t PARTUUID="$(basename @@MENDER_BOOT_PART@@)" -o device)
+  DATA_DEV=$(blkid -t PARTUUID="$(basename @@MENDER_DATA_PART@@)" -o device)
+  MENDER_ROOTFS_PART_A=PARTUUID="$(basename @@MENDER_ROOTFS_PART_A@@)"
+  MENDER_ROOTFS_PART_B=PARTUUID="$(basename @@MENDER_ROOTFS_PART_B@@)"
+  ROOT_A_DEV=$(blkid -t $MENDER_ROOTFS_PART_A -o device)
+  ROOT_B_DEV=$(blkid -t $MENDER_ROOTFS_PART_B -o device)
+else
+  BOOT_DEV=@@MENDER_BOOT_PART@@
+  DATA_DEV=@@MENDER_DATA_PART@@
+  MENDER_ROOTFS_PART_A=@@MENDER_ROOTFS_PART_A@@
+  MENDER_ROOTFS_PART_B=@@MENDER_ROOTFS_PART_B@@
+  ROOT_A_DEV=$MENDER_ROOTFS_PART_A
+  ROOT_B_DEV=$MENDER_ROOTFS_PART_B
 fi
 
 ROOT_DM_NAME=""
@@ -73,30 +81,18 @@ read_args() {
 
 # determine which rootfs to mount
 map_root_dev() {
-  if [[ "@@MENDER/LUKS_PARTUUID_IS_USED@@" == "1" ]]; then
-    MENDER_ROOTFS_PART_A=PARTUUID="$(basename @@MENDER_ROOTFS_PART_A@@)"
-    MENDER_ROOTFS_PART_B=PARTUUID="$(basename @@MENDER_ROOTFS_PART_B@@)"
-  else
-    MENDER_ROOTFS_PART_A=@@MENDER_ROOTFS_PART_A@@
-    MENDER_ROOTFS_PART_B=@@MENDER_ROOTFS_PART_B@@
-  fi
-
   case $ROOT_DEV in
     $MENDER_ROOTFS_PART_A)
       ROOT_DM_NAME=@@MENDER/LUKS_ROOTFS_PART_A_DM_NAME@@
       ROOT_HEADER=@@MENDER/LUKS_ROOTFS_PART_A_HEADER@@
-      ;;
+      ROOT_DEV=$ROOT_A_DEV;;
     $MENDER_ROOTFS_PART_B)
       ROOT_DM_NAME=@@MENDER/LUKS_ROOTFS_PART_B_DM_NAME@@
       ROOT_HEADER=@@MENDER/LUKS_ROOTFS_PART_B_HEADER@@
-      ;;
+      ROOT_DEV=$ROOT_B_DEV;;
     *)
       fatal "unknown root=$ROOT_DEV"
   esac
-
-  if [[ "@@MENDER/LUKS_PARTUUID_IS_USED@@" == "1" ]]; then
-    ROOT_DEV=$(findfs $ROOT_DEV)
-  fi
 }
 
 unlock_luks_partitions() {
