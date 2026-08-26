@@ -1,21 +1,32 @@
 #!/usr/bin/env bash
 ################################################################################
 usage() {
-  echo "usage:"
-  echo "    PASSWORD=\"LUKS_PASSWORD\" $(basename $0) /path/to/YOCTO_IMAGE.uefiimg"
+  echo "Usage:"
+  echo "  PASSWORD=\"<current-luks-password>\" NEWPASSWORD=\"<new-luks-password>\" [REENCRYPT_OPTIONS=\"<cryptsetup reencrypt options>\"] $(basename "$0") <path/to/YOCTO_IMAGE.uefiimg>"
+  echo
+  echo "Required:"
+  echo "  PASSWORD          Current LUKS passphrase"
+  echo "  image path        Existing .uefiimg file to process"
+  echo
+  echo "Optional:"
+  echo "  NEWPASSWORD       New LUKS passphrase"
+  echo "  REENCRYPT_OPTIONS Extra options passed to 'cryptsetup reencrypt'"
+  echo
+  echo "Example:"
+  echo "  PASSWORD=\"old-pass\" NEWPASSWORD=\"new-pass\" REENCRYPT_OPTIONS=\"--init-only\" $(basename "$0") /path/to/core-image.uefiimg"
 }
 
 IMAGE="$1"
 
-[[ ! -v    PASSWORD ]] && usage && exit
-[[ ! -v NEWPASSWORD ]] && NEWPASSWORD="${PASSWORD}"
-[[   -z "${IMAGE}"  ]] && usage && exit
-[[ ! -f "${IMAGE}"  ]] && usage && exit
+[[ ! -v   PASSWORD ]] && usage && exit
+[[   -z "${IMAGE}" ]] && usage && exit
+[[ ! -f "${IMAGE}" ]] && usage && exit
 
 ################################################################################
 set -eu
 source mender-luks-cryptsetup-functions.sh
 
+WORKDIR="$(mktemp --directory)"
 BOOT_MNT="${WORKDIR}/@@MENDER_BOOT_PART_MOUNT_LOCATION@@"
 
 ################################################################################
@@ -25,7 +36,6 @@ dmsetup_remove() {
 
 cleanup() {
   set +e
-    for_each_in_crypttab "luks_close     \${NAME}"
     for_each_in_crypttab "dmsetup_remove \${NAME}"
 
     do_sudo umount  "${BOOT_MNT}" > /dev/null 2>&1
@@ -33,8 +43,11 @@ cleanup() {
     do_sudo losetup -D            > /dev/null 2>&1
     do_sudo sync
   set -eu
+
+  shred -fu "${WORKDIR}"/* 2>/dev/null
+  rm    -fr "${WORKDIR}"
 }
-cleanup && trap 'cleanup; mender_luks_cryptsetup_cleanup' EXIT
+cleanup && trap 'cleanup' EXIT
 
 ################################################################################
 ################################################################################
@@ -53,34 +66,14 @@ _do_task() {
   local DEV="$(echo "${DEV}" | sed "s|@@MENDER_STORAGE_DEVICE_BASE@@|${BASE_DEV}p|g")"
   local HEADER="${WORKDIR}/${HEADER}"
 
-                            luks_reencrypt  "${NAME}" "${DEV}" "${HEADER}"
-                            luks_change_key "${NAME}" "${DEV}" "${HEADER}"
-  PASSWORD="${NEWPASSWORD}" luks_open       "${NAME}" "${DEV}" "${HEADER}"
-
-     [[ ! -v LEGACYPASSWORD ]] && local LEGACYPASSWORD="${NEWPASSWORD}"
-  if [[   -v LEGACYPASSWORD ]]; then
-    if [[ "${NAME}" == "@@MENDER/LUKS__DATA__PART___DM_NAME@@" ]]; then
-      local DATA_DEV="@@MENDER/LUKS_DM_MAPPER_DIR@@/@@MENDER/LUKS__DATA__PART___DM_NAME@@"
-      local DATA_MNT="${WORKDIR}/@@MENDER_DATA_PART_MOUNT_LOCATION@@"
-      local KEY_FILE="$(mktemp --tmpdir=${WORKDIR})"
-
-      mkdir   -p                              "${DATA_MNT}"
-      do_sudo mount     "${DATA_DEV}"         "${DATA_MNT}"
-      echo    -n        "${LEGACYPASSWORD}" > "${KEY_FILE}"
-      do_sudo install -m 400 -D               "${KEY_FILE}" "${WORKDIR}/@@MENDER/LUKS_LEGACY_KEY_FILE@@"
-      do_sudo umount                          "${DATA_MNT}"
-    fi
-  fi
-  luks_close "${NAME}"
+  luks_reencrypt
+  luks_change_key
 
   return 0
 }
 for_each_in_crypttab _do_task
 
 cleanup
-echo "creating bmap: ${IMAGE}"
-bmaptool create -o "${IMAGE}.bmap" "${IMAGE}"
+echo "creating bmap: ${IMAGE}" && bmaptool create -o "${IMAGE}.bmap" "${IMAGE}"
 echo "$(basename ${IMAGE}) can now provision new systems:"
 echo "    bmaptool copy ${IMAGE} <DEST>"
-
-################################################################################

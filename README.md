@@ -76,22 +76,26 @@ Alternatively, a [kas](https://github.com/siemens/kas) file has been provided to
 Additional files in [kas/](kas/) have been provided to selectively turn on some features, such as [TPM2 integration](#tpm2-integration).
 
 ## Image Encryption
-Image encryption is not an automated part of the build process. It can be done with either a post-build script ~~, or on system during 1st boot~~.
+The build generates `--init-only` headers for the LUKS partitions. The partitions **have not** been fully encrypted yet. This image can be used to provision a target, and re-encryption will finish/resume on the system.
 
-The **mender artifact(s) work as-is** w/o this encryption step.
-If all you need is the mender artifact(s), then no further action is required.
-Image encryption is only significant when provisioning a new system.
+If the image needs to be encrypted at rest (prior to provisioning), use the provided [post-build script(s)](#post-build-encryption-script).
+
+The **mender artifact(s) work as-is** without any further encryption steps.
+This encryption only affects the full image used for system provisioning.
 
 ### Post-Build Encryption Script
-The initial run of this script will luksFormat the partitions. Subsequent runs will reencrypt partitions in-place.
-
 To execute:
 
-    bitbake mender-luks-cryptsetup-utils-native -caddto_recipe_sysroot \
-    && PASSWORD="n3w_p@ssw0rd" oe-run-native mender-luks-cryptsetup-utils-native \
+    bitbake mender-luks-cryptsetup-native -caddto_recipe_sysroot \
+    && PASSWORD="n3w_p@ssw0rd" oe-run-native mender-luks-cryptsetup-native \
        mender-luks-cryptsetup-reencrypt-image-file.sh /path/to/IMAGE_FILE
 
-**Note:** The `PASSWORD` used here is what the partitions are initially encrypted with. You'll need to **enter this on first boot**.
+**Control Environment Variables:**
+* `PASSWORD` is required and should match the build password (`MENDER/LUKS_PASSWORD`).
+* `NEWPASSWORD` is optional. Change the existing LUKS passphrase to something new.
+* `REENCRYPT_OPTIONS` is optional. Additional `cryptsetup-reencrypt` options.
+  * `--init-only` when you want to initialize re-encryption metadata and defer the heavy data move to later (for example, first boot on target).
+  * `--resume-only` to continue a previously initialized/interrupted re-encryption run without re-initializing state.
 
 This will/may take awhile. On failure, it *may* not cleanup gracefully. Check ``/dev/mapper`` and ``/dev/loop*`` and cleanup as needed:
 

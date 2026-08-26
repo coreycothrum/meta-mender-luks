@@ -1,42 +1,44 @@
 #!/usr/bin/env bash
 ################################################################################
-set -eu
+set -u
 
-export TMPDIR="${TMPDIR:-"/tmp"}/mender-luks-cryptsetup-utils"
+export TMPDIR="${TMPDIR:-"/tmp"}/mender-luks-cryptsetup"
 if [[ ! -d "${TMPDIR}" ]]; then
   mkdir -p "${TMPDIR}"
 fi
-export WORKDIR="$(mktemp --directory)"
 
 ################################################################################
+# print message and abort
 fatal() {
-  echo "aborting: $@"
+  echo "aborting: $@" >&2
   exit 1
 }
 
 ################################################################################
+# execute command with sudo privileges
 do_sudo() {
-  PSEUDO_UNLOAD=1 sudo env PATH=${PATH} PSEUDO_UNLOAD=1 "$@"
+  if [[ ${EUID} -eq 0 ]]; then
+    "$@"
+  else
+    sudo -n env PATH="${PATH}" PSEUDO_UNLOAD=1 "$@"
+  fi
 }
 
 ################################################################################
-mender_luks_cryptsetup_cleanup() {
-  set +e
-    unset    PASSWORD
-    unset NEWPASSWORD
-
-    if [[ -d "${WORKDIR}" ]]; then
-      find   "${WORKDIR}" -type f -exec shred -fu {} \;
-      rm -fr "${WORKDIR}"
-    fi
-
-    sync
-  set -eu
+# detect whether a LUKS header has a pending reencryption keyslot
+# output: "true" if a reencryption keyslot is pending, "false" otherwise
+_is_reencrypt_pending() {
+  [[ ! -f "${HEADER}" ]] && fatal "${HEADER} does not exist"
+  local METADATA_JSON="$(do_sudo cryptsetup luksDump --dump-json-metadata "${HEADER}" 2>/dev/null)"
+  printf "%s\n" "$(printf "%s\n" "${METADATA_JSON}" | jq -r 'any(.keyslots[]?; .type=="reencrypt")' 2>/dev/null)"
 }
 
 ################################################################################
-################################################################################
-################################################################################
+# source each entry in the crypttab and execute the given command/function for each LUKS device
+# Environment variables available for the command/function:
+#   NAME   : name (dm mapper) of the LUKS device
+#   DEV    : device path of the LUKS device
+#   HEADER : path to the LUKS header file
 for_each_in_crypttab() {
   local CMD="${@}"
 
@@ -50,10 +52,14 @@ for_each_in_crypttab() {
         local NAME="${BASH_REMATCH[1]}"
         local DEV="${BASH_REMATCH[2]}"
         local OPTS="${BASH_REMATCH[3]}"
+        local HEADER=""
 
         if [[ "${OPTS}" =~ ^.*header=([^[:space:]]*)[[:space:],]*$ ]]; then
           if [[ "${#BASH_REMATCH[@]}" == 2 ]]; then
-            local HEADER="${BASH_REMATCH[1]}"
+            HEADER="${BASH_REMATCH[1]}"
+            if [[ "${HEADER}" == *:* ]]; then
+              HEADER="@@MENDER_BOOT_PART_MOUNT_LOCATION@@/${HEADER%%:*}"
+            fi
           fi
         fi
       eval "${CMD}"
@@ -65,6 +71,9 @@ for_each_in_crypttab() {
 }
 
 ################################################################################
+# execute the given command/function for each LUKS header file in $HEADER_DIR (or default location)
+# Environment variables available for the command/function:
+#   HEADER : path to the LUKS header file
 for_each_luks_header() {
   local CMD="${@}"
   local HEADER_DIR="${HEADER_DIR:-"@@MENDER/LUKS_HEADER_DIR@@"}"
@@ -78,88 +87,79 @@ for_each_luks_header() {
 }
 
 ################################################################################
-################################################################################
-################################################################################
-luks_close() {
-  local NAME="$1"
-  eval do_sudo cryptsetup --batch-mode --type luks2 close ${NAME}
-  sync
-}
-
-################################################################################
-luks_open() {
-  local NAME="$1"
-  local DEV="$2"
-  local HEADER="$3"
-  local PASSWORD="${PASSWORD}"
-
-  [[ ! -b "${DEV}"    ]] && fatal "${DEV}    does not exist"
-  [[ ! -f "${HEADER}" ]] && fatal "${HEADER} does not exist"
-
-  local KEY_FILE="$(mktemp --tmpdir=${WORKDIR})" && echo -n "${PASSWORD}" > "${KEY_FILE}"
-
-  eval do_sudo cryptsetup --batch-mode --type luks2 \
-    --header      "${HEADER}"                       \
-    --key-file    "${KEY_FILE}"                     \
-    open "${DEV}" "${NAME}"
-  sync
-}
-
-################################################################################
+# change the LUKS password for the given device
+# required environment variables:
+#   NAME       : name (dm mapper) of the LUKS device
+#   DEV        : device path of the LUKS device
+#   HEADER     : path to the LUKS header file
+#   PASSWORD   : current LUKS password
+#   NEWPASSWORD: new LUKS password
 luks_change_key() {
-  local NAME="$1"
-  local DEV="$2"
-  local HEADER="$3"
-  local PASSWORD="${PASSWORD}"
-  local NEWPASSWORD="${NEWPASSWORD}"
-
   [[ ! -b "${DEV}"    ]] && fatal "${DEV}    does not exist"
   [[ ! -f "${HEADER}" ]] && fatal "${HEADER} does not exist"
 
-  local OLD_KEY_FILE="$(mktemp --tmpdir=${WORKDIR})" && echo -n    "${PASSWORD}" > "${OLD_KEY_FILE}"
-  local NEW_KEY_FILE="$(mktemp --tmpdir=${WORKDIR})" && echo -n "${NEWPASSWORD}" > "${NEW_KEY_FILE}"
+  echo "${NAME}: executing cryptsetup luksChangeKey" >&2
 
-  echo "${NAME}: updating LUKS password"
-
-  eval do_sudo cryptsetup --batch-mode --type luks2 \
-    --force-password                                \
-    --header               "${HEADER}"              \
-    --key-file             "${OLD_KEY_FILE}"        \
-    luksChangeKey "${DEV}" "${NEW_KEY_FILE}"
-  sync
-}
-
-################################################################################
-# 1st time (no/missing header): encrypt/format luks
-# subsequent run(s): reencrypt
-luks_reencrypt() {
-  local NAME="$1"
-  local DEV="$2"
-  local HEADER="$3"
-  local PASSWORD="${PASSWORD}"
-
-  [[ ! -b "${DEV}" ]] && fatal "${DEV} does not exist"
-
-  local KEY_FILE="$(mktemp --tmpdir=${WORKDIR})" && echo -n "${PASSWORD}" > "${KEY_FILE}"
-  local ENCRYPT_CMD=""
-  local OFFLINE_CMD=""
-
-  if [[ ! -f "${HEADER}" ]]; then
-    echo "${NAME}: encrypting new LUKS partition (may take awhile)"
-    local ENCRYPT_CMD="--encrypt"
-  else
-    echo "${NAME}: reencrypting existing LUKS partition (may take awhile)"
-    local ENCRYPT_CMD=""
+  if [[ "$(_is_reencrypt_pending)" == *"true"* ]]; then
+    echo "${NAME:-DEV}: reencryption pending; cannot luksChangeKey" >&2
+    return 0
   fi
 
-  eval time do_sudo cryptsetup --batch-mode --type luks2 \
-    @@MENDER/LUKS_CRYPTSETUP_REENCRYPT_OPTIONS@@         \
-    --force-password                                     \
-    --header   "${HEADER}"                               \
-    --key-file "${KEY_FILE}"                             \
-    --progress-frequency 30                              \
-    reencrypt "${ENCRYPT_CMD}" "${OFFLINE_CMD}" "${DEV}"
+  do_sudo env \
+    HEADER="${HEADER}" \
+    DEV="${DEV}" \
+    PASSWORD="${PASSWORD}" \
+    NEWPASSWORD="${NEWPASSWORD:-${PASSWORD}}" \
+    bash -c '
+      cryptsetup --type luks2 \
+        --force-password \
+        --header "${HEADER}" \
+        --key-file <(printf "%s" "${PASSWORD}") \
+        luksChangeKey "${DEV}" <(printf "%s" "${NEWPASSWORD}")
+    '  || return $?
   sync
+
+  return 0
 }
 
 ################################################################################
+# re-encrypt the given LUKS device with the provided options
+# required environment variables:
+#   NAME              : name (dm mapper) of the LUKS device
+#   DEV               : device path of the LUKS device
+#   HEADER            : path to the LUKS header file
+#   PASSWORD          : current LUKS password
+#   REENCRYPT_OPTIONS : options for the re-encryption process/command
+luks_reencrypt() {
+  [[ ! -b "${DEV}"    ]] && fatal "${DEV}    does not exist"
+  [[ ! -f "${HEADER}" ]] && fatal "${HEADER} does not exist"
+
+  local PENDING_REENCRYPT="$(_is_reencrypt_pending)"
+  if   [[ "${PENDING_REENCRYPT}" == *"false"* && "${REENCRYPT_OPTIONS:-}" == *"--resume-only"* ]]; then
+    echo "${NAME:-DEV}: no pending reencryption; --resume-only is a noop" >&2
+    return 0
+  elif [[ "${PENDING_REENCRYPT}" == *"true"*  && "${REENCRYPT_OPTIONS:-}" == *"--init-only"*   ]]; then
+    echo "${NAME:-DEV}: reencryption already pending; --init-only is a noop" >&2
+    return 0
+  fi
+  echo "${NAME:-DEV}: executing cryptsetup-reencrypt reencrypt ${REENCRYPT_OPTIONS:-}" >&2
+
+  time do_sudo env \
+  HEADER="${HEADER}" \
+  DEV="${DEV}" \
+  PASSWORD="${PASSWORD}" \
+  PROGRESS_FREQUENCY="${PROGRESS_FREQUENCY:-30}" \
+  REENCRYPT_OPTIONS="${REENCRYPT_OPTIONS:-}" \
+  bash -c '
+    cryptsetup --type luks2 \
+      @@MENDER/LUKS_CRYPTSETUP_REENCRYPT_OPTIONS@@ \
+      --force-password \
+      --header "${HEADER}" \
+      --key-file <(printf "%s" "${PASSWORD}") \
+      --progress-frequency "${PROGRESS_FREQUENCY}" \
+      reencrypt ${REENCRYPT_OPTIONS} "${DEV}"
+  ' || return $?
+  sync
+
+  return 0
+}

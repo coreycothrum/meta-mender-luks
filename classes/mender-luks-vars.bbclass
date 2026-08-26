@@ -1,7 +1,6 @@
 ################################################################################
 # mender-luks variables
 ################################################################################
-MENDER/LUKS_PRINT_REENCRYPT_USAGE ??= "0"
 MENDER/LUKS_BYPASS_REENCRYPT      ??= "1"
 MENDER/LUKS_BYPASS_RANDOM_KEY     ??= "1"
 MENDER/LUKS_TPM2_READ_CMD         ??= "${@bb.utils.contains('DISTRO_FEATURES', 'tpm2', 'mender-luks-tpm2-util.sh --read', ':', d)}"
@@ -12,22 +11,11 @@ MENDER/LUKS_HEADER_DIR              = "${MENDER_BOOT_PART_MOUNT_LOCATION}/LUKS"
 MENDER/LUKS_HEADER_EXT              = "luks"
 MENDER/LUKS_PARTUUID_IS_USED        = "${@bb.utils.contains('MENDER_FEATURES_ENABLE', 'mender-partuuid', 'true', 'false', d)}"
 
-MENDER/LUKS_ROOTFS_PART_A_HEADER    = "${MENDER/LUKS_HEADER_DIR}/${MENDER/LUKS_ROOTFS_PART_A_HEADER_NAME}"
-MENDER/LUKS_ROOTFS_PART_B_HEADER    = "${MENDER/LUKS_HEADER_DIR}/${MENDER/LUKS_ROOTFS_PART_B_HEADER_NAME}"
-MENDER/LUKS__DATA__PART___HEADER    = "${MENDER/LUKS_HEADER_DIR}/${MENDER/LUKS__DATA__PART___HEADER_NAME}"
-
-MENDER/LUKS_ROOTFS_PART_A_HEADER_NAME = "${MENDER/LUKS_ROOTFS_PART_A_DM_NAME}.${MENDER/LUKS_HEADER_EXT}"
-MENDER/LUKS_ROOTFS_PART_B_HEADER_NAME = "${MENDER/LUKS_ROOTFS_PART_B_DM_NAME}.${MENDER/LUKS_HEADER_EXT}"
-MENDER/LUKS__DATA__PART___HEADER_NAME = "${MENDER/LUKS__DATA__PART___DM_NAME}.${MENDER/LUKS_HEADER_EXT}"
-
 MENDER/LUKS_DM_MAPPER_DIR           = "/dev/mapper"
 MENDER/LUKS__DATA__PART___DM_NAME   = "DataPart${MENDER_DATA_PART_NUMBER}"
 MENDER/LUKS__SWAP__PART___DM_NAME   = "SwapPart"
 MENDER/LUKS_ROOTFS_PART_A_DM_NAME   = "RootfsPart${MENDER_ROOTFS_PART_A_NUMBER}"
 MENDER/LUKS_ROOTFS_PART_B_DM_NAME   = "RootfsPart${MENDER_ROOTFS_PART_B_NUMBER}"
-
-MENDER/LUKS_SUDO_ENV                = "PATH=$PATH LD_LIBRARY_PATH=$LD_LIBRARY_PATH PSEUDO_UNLOAD=1"
-MENDER/LUKS_SUDO_CMD                = "env "PSEUDO_UNLOAD=1" /usr/bin/sudo env "${MENDER/LUKS_SUDO_ENV}""
 
 MENDER/LUKS_SYSTEMD_INITRD_CREDENTIALS_DIR = "/run/credentials/@initrd"
 MENDER/LUKS_SYSTEMD_INITRD_CREDENTIALS_VAR = "cryptsetup.passphrase"
@@ -46,7 +34,7 @@ MENDER/LUKS_PASSWORD_REENCRYPT    ??= "${MENDER/LUKS_PASSWORD}"
 
 MENDER/LUKS_TPM2_DEVICE                  ??= "auto"
 MENDER/LUKS_CRYPTSETUP_REENCRYPT_OPTIONS ??= ""
-MENDER/LUKS_CRYPTTAB_OPTIONS             ??= "luks,nofail,try-empty-password=1,${@bb.utils.contains("DISTRO_FEATURES", 'tpm2', 'tpm2-device=${MENDER/LUKS_TPM2_DEVICE}', '', d)}"
+MENDER/LUKS_CRYPTTAB_EXTRA_OPTIONS       ??= "try-empty-password=1,discard"
 
 ################################################################################
 ################################################################################
