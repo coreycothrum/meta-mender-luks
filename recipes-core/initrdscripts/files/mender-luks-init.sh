@@ -96,21 +96,22 @@ map_root_dev() {
   fi
 }
 
-
 unlock_luks_partitions() {
-  local KEY_FILE="@@MENDER/LUKS_SYSTEMD_INITRD_CREDENTIALS_DIR@@/@@MENDER/LUKS_SYSTEMD_INITRD_CREDENTIALS_VAR@@"
+  local CRYPTSETUP_KEY_FILE="@@MENDER/LUKS_SYSTEMD_INITRD_CREDENTIALS_DIR@@/@@MENDER/LUKS_SYSTEMD_CRYPTSETUP_PASSPHRASE_CREDENTIAL@@"
+  local CRYPTENROLL_KEY_FILE="@@MENDER/LUKS_SYSTEMD_INITRD_CREDENTIALS_DIR@@/@@MENDER/LUKS_SYSTEMD_CRYPTENROLL_PASSPHRASE_CREDENTIAL@@"
 
-  install -m 600 -D <(@@MENDER/LUKS_TPM2_READ_CMD@@) "${KEY_FILE}"
+  install -m 600 -D <(@@MENDER/LUKS_TPM2_READ_CMD@@) "${CRYPTSETUP_KEY_FILE}"
 
   for IDX in {1..3}; do
-    eval cryptsetup --header "$MNT_DIR/$ROOT_HEADER"          \
-               --key-file="${KEY_FILE}"                       \
-               luksOpen $ROOT_DEV $ROOT_DM_NAME               \
-    && ROOT_DEV="@@MENDER/LUKS_DM_MAPPER_DIR@@/$ROOT_DM_NAME" \
+    eval cryptsetup --header "$MNT_DIR/$ROOT_HEADER"                        \
+               --key-file="${CRYPTSETUP_KEY_FILE}"                          \
+               luksOpen $ROOT_DEV $ROOT_DM_NAME                             \
+    && ROOT_DEV="@@MENDER/LUKS_DM_MAPPER_DIR@@/$ROOT_DM_NAME"               \
+    && install -m 600 -D "${CRYPTSETUP_KEY_FILE}" "${CRYPTENROLL_KEY_FILE}" \
     && return 0
 
     echo "!!! ${ROOT_DEV}: try $IDX to unlock LUKS partition FAILED !!!"
-    read -sp "${ROOT_DEV} current password:" && echo -n "${REPLY}" > "${KEY_FILE}"
+    read -sp "${ROOT_DEV} current password:" && echo -n "${REPLY}" > "${CRYPTSETUP_KEY_FILE}"
   done
 
   fatal "!!! $ROOT_DEV: failed to unlock LUKS partition !!!"

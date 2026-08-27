@@ -36,7 +36,7 @@ do_mender_luks_encrypt_image() {
   bbplain "\n"
   bbplain "Optionally, you may want to fully encrypt before provisioning:"
   bbplain "    bitbake mender-luks-cryptsetup-native -caddto_recipe_sysroot \\"
-  bbplain "    && PASSWORD=\"${MENDER/LUKS_PASSWORD}\" NEWPASSWORD=\"${MENDER/LUKS_PASSWORD_REENCRYPT}\" oe-run-native mender-luks-cryptsetup-native \\"
+  bbplain "    && PASSWORD=\"${MENDER/LUKS_PASSWORD}\" oe-run-native mender-luks-cryptsetup-native \\"
   bbplain "       mender-luks-cryptsetup-reencrypt-image-file.sh ${IMAGE_PATH}"
   bbplain "\n"
   bbplain "For more information, visit: https://github.com/coreycothrum/meta-mender-luks/tree/master#image-encryption\n"
