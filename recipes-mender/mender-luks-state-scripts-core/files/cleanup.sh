@@ -1,10 +1,10 @@
 #!/bin/sh
 
-function log {
+log() {
   echo "$@" >&2
 }
 
-function cleanup {
+cleanup() {
   sync
 
   mount | grep -q $ROOT_MNT_DIR/data && umount -l $ROOT_MNT_DIR/data
@@ -18,6 +18,6 @@ function cleanup {
 trap cleanup EXIT
 
 ################################################################################
-ROOT_MNT_DIR="@@MENDER/KERNEL_ROOT_CANDIDATE_MNT_DIR@@"
+ROOT_MNT_DIR="@@MENDER/LUKS_ROOT_CANDIDATE_MNT_DIR@@"
 
 exit

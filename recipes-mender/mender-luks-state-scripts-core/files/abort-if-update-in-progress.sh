@@ -1,12 +1,12 @@
 #!/bin/sh
 set -e
 
-function log {
+log() {
   echo "$@" >&2
 }
 
-function fatal {
-  log $@
+fatal() {
+  log "$@"
   exit 1
 }
 

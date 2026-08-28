@@ -4,13 +4,13 @@ LICENSE          = "MIT"
 LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/MIT;md5=0835ade698e0bcf8506ecda2f7b4f302"
 
 ################################################################################
-RDEPENDS:${PN} = "      \
-  coreutils             \
-  mender-luks-tpm2-util \
-  util-linux            \
+RDEPENDS:${PN} = " \
+  coreutils \
+  mender-luks-cryptenroll \
+  util-linux \
 "
-SRC_URI = "            \
-  file://tpm-seal.sh   \
+SRC_URI = " \
+  file://tpm-seal.sh \
   file://tpm-unseal.sh \
 "
 S = "${UNPACKDIR}"

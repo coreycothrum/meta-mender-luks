@@ -15,13 +15,7 @@ RDEPENDS:${PN} = " \
   coreutils        \
   cryptsetup       \
   kmod             \
-  ${@bb.utils.contains('DISTRO_FEATURES', 'tpm2', 'tpm2-tools', '', d)} \
   util-linux       \
-"
-
-RECOMMENDS:${PN} = "    \
-  kernel-module-tpm-crb \
-  kernel-module-tpm-tis \
 "
 
 inherit bitbake-variable-substitution

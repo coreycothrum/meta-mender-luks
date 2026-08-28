@@ -1,12 +1,12 @@
 #!/bin/sh
 set -e
 
-function log {
+log() {
   echo "$@" >&2
 }
 
-function fatal {
-  log $@
+fatal() {
+  log "$@"
   exit 1
 }
 
@@ -21,7 +21,7 @@ BOOT_PART="$(fw_printenv  mender_boot_part  | sed 's/[^=]*=//')"
 DATA_PART="@@MENDER/LUKS_DM_MAPPER_DIR@@/@@MENDER/LUKS__DATA__PART___DM_NAME@@"
 ROOT_PART=""
 
-ROOT_MNT_DIR="@@MENDER/KERNEL_ROOT_CANDIDATE_MNT_DIR@@"
+ROOT_MNT_DIR="@@MENDER/LUKS_ROOT_CANDIDATE_MNT_DIR@@"
 
 #BOOT_PART :   active partition
 #ROOT_PART : inactive partition
