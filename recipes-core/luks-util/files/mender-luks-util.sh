@@ -169,7 +169,6 @@ function _reencrypt {
     if [ ! -z "$header" ]; then
       if cryptsetup isLuks $dev --header $header; then
         cryptsetup reencrypt  $dev          \
-                   --key-slot $KEY_SLOT     \
                    --key-file $LUK_KEY_FILE \
                    --header   $header       \
                    --progress-frequency 30
