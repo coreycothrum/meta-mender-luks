@@ -49,13 +49,6 @@ The following definitions should be added to ``local.conf`` or ``custom_machine.
     # NOTE: there are plans to deprecate this functionality
     # MENDER/LUKS_BYPASS_REENCRYPT      = "1"
 
-    # PCRs levels to seal TPM2
-    # unlock options: none | min | max | N,N,N
-    # MENDER/LUKS_TPM_PCR_SET_NONE      = "0"
-    # MENDER/LUKS_TPM_PCR_SET_MIN       = "0,1"
-    # MENDER/LUKS_TPM_PCR_SET_MAX       = "0,1,2,3,4,5"
-    # MENDER/LUKS_TPM_PCR_UPDATE_UNLOCK = "min"
-
 ### kas
 Alternatively, a [kas](https://github.com/siemens/kas) file has been provided to help with setup/config. [Include](https://kas.readthedocs.io/en/latest/userguide.html#including-configuration-files-from-other-repos) `kas/kas.yml` from this layer in the top level kas file. E.g.:
 
