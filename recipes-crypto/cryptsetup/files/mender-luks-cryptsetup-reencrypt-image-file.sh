@@ -50,7 +50,13 @@ do_sudo mount "${BOOT_DEV}" "${BOOT_MNT}"
 
 _do_task() {
   local NAME="${NAME}"
-  local DEV="$(echo "${DEV}" | sed "s|@@MENDER_STORAGE_DEVICE_BASE@@|${BASE_DEV}p|g")"
+
+  if [[ "@@MENDER/LUKS_PARTUUID_IS_USED@@" == "1" ]]; then
+    local DEV="$(readlink -f $DEV | grep ${BASE_DEV})"
+  else
+    local DEV="$(echo "${DEV}" | sed "s|@@MENDER_STORAGE_DEVICE_BASE@@|${BASE_DEV}p|g")"
+  fi
+
   local HEADER="${WORKDIR}/${HEADER}"
 
                             luks_reencrypt  "${NAME}" "${DEV}" "${HEADER}"
