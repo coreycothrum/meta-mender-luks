@@ -18,17 +18,16 @@ PCRS_MAX="@@TPM_PCR_SET_MAX@@"
 PCRS=$PCRS_MAX
 NONE=false
 
+LOCK_FILE="/run/mender-luks-tpm2-util.lock"
+
 # temp/working files; deleted on exit
-TMPDIR="${TMPDIR:-"/tmp"}/mender-luks-tpm2"
-WORKDIR="$(mktemp --directory)"
+WORKDIR="$(mktemp --directory "${TMPDIR:-/run}/mender-luks-tpm2.XXXXXX")"
 PCR_FNAME="${WORKDIR}/.pcrs"
 POLICY_FNAME="${WORKDIR}/.policy"
 PRIMARY_CTX="${WORKDIR}/.primary.ctx"
 LOAD_CTX="${WORKDIR}/.load.ctx"
 TPM_PUB_KEY="${WORKDIR}/.tpm.TEMP.pub"
 TPM_PRIV_KEY="${WORKDIR}/.tpm.TEMP.priv"
-
-mkdir -p "${WORKDIR}"
 
 ################################################################################
 usage() {
@@ -53,7 +52,7 @@ usage() {
 }
 
 fatal() {
-  echo $@ 1>&3
+  echo "$@" 1>&3
   exit 1
 }
 
@@ -67,6 +66,9 @@ trap cleanup EXIT
 
 ################################################################################
 read_tpm2() {
+  exec 9>"$LOCK_FILE"
+  flock -s 9
+
   # First try unseal without PCR auth for userwithauth-sealed keys.
   if tpm2_unseal -Q --object-context=@@TPM_KEY_INDEX@@ 2>/dev/null; then
     return
@@ -74,7 +76,7 @@ read_tpm2() {
 
   for pcrs in "$PCRS" "$PCRS_NONE" "$PCRS_MIN" "$PCRS_MAX"
   do
-    if tpm2_unseal -Q --object-context=@@TPM_KEY_INDEX@@ --auth=pcr:@@TPM_PCR_ALG@@:$pcrs 2>/dev/null; then
+    if tpm2_unseal -Q --object-context=@@TPM_KEY_INDEX@@ --auth="pcr:@@TPM_PCR_ALG@@:$pcrs" 2>/dev/null; then
       return
     fi
   done
@@ -88,49 +90,59 @@ read_tpm2() {
 }
 
 write_tpm2() {
+  exec 9>"$LOCK_FILE"
+  flock -x 9
+
   test -f "$INFILE" || fatal "LUKS key file $INFILE does not exist"
 
   KSIZE="$(wc -c < "$INFILE")"
   MSIZE="@@TPM_KEY_SIZE_MAX@@"
   ATTRS="@@TPM_ATTRIBUTES@@"
 
-  $NONE                      && ATTRS="${ATTRS}|userwithauth"
+  if "$NONE"; then
+    ATTRS="${ATTRS}|userwithauth"
+  fi
+  test "$KSIZE" -gt 0        || fatal "key in $INFILE is empty"
   test "$KSIZE" -le "$MSIZE" || fatal "key in $INFILE is > max allowed ($MSIZE)"
 
-  tpm2_evictcontrol  -Q --hierarchy=@@TPM_HIERARCHY@@      \
-                        --object-context=@@TPM_KEY_INDEX@@ || true
+  tpm2_pcrread       -Q "@@TPM_PCR_ALG@@:$PCRS" \
+                        --output="$PCR_FNAME"
 
-  tpm2_pcrread       -Q @@TPM_PCR_ALG@@:$PCRS             \
-                        --output=$PCR_FNAME
+  tpm2_createpolicy  -Q --policy-pcr             \
+                        --policy="$POLICY_FNAME" \
+                        --policy-algorithm=@@TPM_HASH_ALG@@ \
+                        --pcr="$PCR_FNAME"       \
+                        --pcr-list="@@TPM_PCR_ALG@@:$PCRS"
+  test -s "$POLICY_FNAME" || fatal "TPM policy file was not created: $POLICY_FNAME"
 
-  tpm2_createpolicy  -Q --policy-pcr                                  \
-                        --policy=$POLICY_FNAME                        \
-                        --pcr=$PCR_FNAME                              \
-                        --pcr-list=@@TPM_PCR_ALG@@:$PCRS
-
-  # create and load an object; sealed to policy
   tpm2_createprimary -Q --hierarchy=@@TPM_HIERARCHY@@     \
                         --hash-algorithm=@@TPM_HASH_ALG@@ \
                         --key-algorithm=@@TPM_KEY_ALG@@   \
-                        --key-context=$PRIMARY_CTX
+                        --key-context="$PRIMARY_CTX"
 
-  tpm2_create        -Q --attributes=$ATTRS                           \
+  tpm2_create        -Q --attributes="$ATTRS"             \
                         --hash-algorithm=@@TPM_HASH_ALG@@ \
-                        --public=$TPM_PUB_KEY                         \
-                        --private=$TPM_PRIV_KEY                       \
-                        --parent-context=$PRIMARY_CTX                 \
-                        --policy=$POLICY_FNAME                        \
-                        --sealing-input=$INFILE
+                        --public="$TPM_PUB_KEY"           \
+                        --private="$TPM_PRIV_KEY"         \
+                        --parent-context="$PRIMARY_CTX"   \
+                        --policy="$POLICY_FNAME"          \
+                        --sealing-input="$INFILE"
 
-  tpm2_load          -Q --public=$TPM_PUB_KEY                         \
-                        --private=$TPM_PRIV_KEY                       \
-                        --parent-context=$PRIMARY_CTX                 \
-                        --key-context=$LOAD_CTX
+  tpm2_load          -Q --public="$TPM_PUB_KEY"         \
+                        --private="$TPM_PRIV_KEY"       \
+                        --parent-context="$PRIMARY_CTX" \
+                        --key-context="$LOAD_CTX"
 
+  # !! Eviction and persistence are separate operations; this is not power-loss atomic !!
+  # evict existing key
+  if tpm2_getcap handles-persistent | grep -qi "@@TPM_KEY_INDEX@@"; then
+    tpm2_evictcontrol -Q --hierarchy=@@TPM_HIERARCHY@@ --object-context=@@TPM_KEY_INDEX@@ || fatal "failed to evict the existing TPM object; verify its state before rebooting"
+  fi
   # make persistent
-  tpm2_evictcontrol  -Q --hierarchy=@@TPM_HIERARCHY@@     \
-                        --object-context=$LOAD_CTX                    \
-                        @@TPM_KEY_INDEX@@
+  tpm2_evictcontrol -Q \
+    --hierarchy=@@TPM_HIERARCHY@@ \
+    --object-context="$LOAD_CTX"  \
+    @@TPM_KEY_INDEX@@ || fatal "failed to persist the verified replacement TPM object"
 }
 
 ################################################################################
@@ -159,6 +171,7 @@ do
       case $2 in
         -*) fatal "missing value for --pcrs" ;;
       esac
+      NONE=false
       case $2 in
         "none") PCRS=$PCRS_NONE; NONE=true ;;
         "min")  PCRS=$PCRS_MIN ;;

@@ -23,8 +23,10 @@ FILES:${PN} = "                                                 \
 "
 RDEPENDS:${PN} = "  \
   coreutils         \
+  diffutils         \
   packagegroup-tpm2 \
   util-linux        \
+  util-linux-flock  \
 "
 
 ################################################################################
